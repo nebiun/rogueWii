@@ -840,7 +840,7 @@ int md_stdmenu(MENU_t table[], const char *title, int numelem)
 int md_cmdmenu(void)
 {
 	static MENU_t commands[] = {
-		{RC_KEY_THROW, OPT_DSP, "Throw an object"},
+		{RC_KEY_PICKUP, OPT_DSP, "Pick-up something"},
 		{RC_KEY_FIGHT, OPT_DSP, "Fight until someone dies"},
 		{RC_KEY_MOVE, OPT_DSP, "Move without picking up"},
 		{RC_KEY_ZAP, OPT_DSP, "Zap with a staff or wand"},
@@ -927,8 +927,9 @@ void md_help(void)
 		"Use + to search for traps or secret doors",
 		"Use + and A to climb down a staircase",
 		"Use + and B to do nothing (relax)",
-		"Use - to climb up a staircase",
-		"Use - and A to pick up something",
+		"Use - to throw something",
+		"Use - and A to climb up a staircase",
+		"Use - and B to see this help",
 		""
 	};
 	
@@ -1057,7 +1058,7 @@ static int _md_readchar(void)
 				else if(_ch_flags & MD_CTRL)
 					md_help();
 				else {
-					ch = RC_KEY_PICKUP;     // Pick up something
+					ch = RC_KEY_THROW;     // Throw something
 				}
 			}
 		}
