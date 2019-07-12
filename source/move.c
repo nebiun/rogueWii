@@ -168,7 +168,7 @@ hit_bound:
 	    goto move_stuff;
 	case PASSAGE:
 	    /*
-	     * break;case you're in a corridor, you don't know if you're in
+	     * when you're in a corridor, you don't know if you're in
 	     * a maze room or not, and there ain't no way to find out
 	     * if you're leaving a maze room, so it is necessary to
 	     * always recalculate proom.
@@ -279,72 +279,101 @@ be_trapped(coord *tc)
 	    level++;
 	    new_level();
 	    msg("you fell into a trap!");
-	break;case T_BEAR:
+		break;
+	case T_BEAR:
 	    no_move += BEARTIME;
 	    msg("you are caught in a bear trap");
-        break;case T_MYST:
-            switch(rnd(11))
-            {
-                case 0: msg("you are suddenly in a parallel dimension");
-                break;case 1: msg("the light in here suddenly seems %s", rainbow[rnd(cNCOLORS)]);
-                break;case 2: msg("you feel a sting in the side of your neck");
-                break;case 3: msg("multi-colored lines swirl around you, then fade");
-                break;case 4: msg("a %s light flashes in your eyes", rainbow[rnd(cNCOLORS)]);
-                break;case 5: msg("a spike shoots past your ear!");
-                break;case 6: msg("%s sparks dance across your armor", rainbow[rnd(cNCOLORS)]);
-                break;case 7: msg("you suddenly feel very thirsty");
-                break;case 8: msg("you feel time speed up suddenly");
-                break;case 9: msg("time now seems to be going slower");
-                break;case 10: msg("you pack turns %s!", rainbow[rnd(cNCOLORS)]);
-            }
-	break;case T_SLEEP:
+        break;
+	case T_MYST:
+		switch(rnd(11))
+		{
+		case 0: 
+			msg("you are suddenly in a parallel dimension");
+			break;
+		case 1: 
+			msg("the light in here suddenly seems %s", rainbow[rnd(cNCOLORS)]);
+			break;
+		case 2: 
+			msg("you feel a sting in the side of your neck");
+			break;
+		case 3: 
+			msg("multi-colored lines swirl around you, then fade");
+			break;
+		case 4: 
+			msg("a %s light flashes in your eyes", rainbow[rnd(cNCOLORS)]);
+			break;
+		case 5: 
+			msg("a spike shoots past your ear!");
+			break;
+		case 6: 
+			msg("%s sparks dance across your armor", rainbow[rnd(cNCOLORS)]);
+			break;
+		case 7: 
+			msg("you suddenly feel very thirsty");
+			break;
+		case 8:
+			msg("you feel time speed up suddenly");
+			break;
+		case 9: 
+			msg("time now seems to be going slower");
+			break;
+		case 10: 
+			msg("you pack turns %s!", rainbow[rnd(cNCOLORS)]);
+			break;
+		}
+		break;
+	case T_SLEEP:
 	    no_command += SLEEPTIME;
 	    player.t_flags &= ~ISRUN;
 	    msg("a strange white mist envelops you and you fall asleep");
-	break;case T_ARROW:
+		break;
+	case T_ARROW:
 	    if (swing(pstats.s_lvl - 1, pstats.s_arm, 1))
 	    {
-		pstats.s_hpt -= roll(1, 6);
-		if (pstats.s_hpt <= 0)
-		{
-		    msg("an arrow killed you");
-		    death('a');
-		}
-		else
-		    msg("oh no! An arrow shot you");
+			pstats.s_hpt -= roll(1, 6);
+			if (pstats.s_hpt <= 0)
+			{
+				msg("an arrow killed you");
+				death('a');
+			}
+			else
+				msg("oh no! An arrow shot you");
 	    }
 	    else
 	    {
-		arrow = new_item();
-		init_weapon(arrow, ARROW);
-		arrow->o_count = 1;
-		arrow->o_pos = hero;
-		fall(arrow, FALSE);
-		msg("an arrow shoots past you");
+			arrow = new_item();
+			init_weapon(arrow, ARROW);
+			arrow->o_count = 1;
+			arrow->o_pos = hero;
+			fall(arrow, FALSE);
+			msg("an arrow shoots past you");
 	    }
-	break;case T_TELEP:
+		break;
+	case T_TELEP:
 	    /*
 	     * since the hero's leaving, look() won't put a TRAP
 	     * down for us, so we have to do it ourself
 	     */
 	    teleport();
 	    mvaddch(tc->y, tc->x, TRAP);
-	break;case T_DART:
+		break;
+	case T_DART:
 	    if (!swing(pstats.s_lvl+1, pstats.s_arm, 1))
-		msg("a small dart whizzes by your ear and vanishes");
+			msg("a small dart whizzes by your ear and vanishes");
 	    else
 	    {
-		pstats.s_hpt -= roll(1, 4);
-		if (pstats.s_hpt <= 0)
-		{
-		    msg("a poisoned dart killed you");
-		    death('d');
-		}
-		if (!ISWEARING(R_SUSTSTR) && !save(VS_POISON))
-		    chg_str(-1);
-		msg("a small dart just hit you in the shoulder");
+			pstats.s_hpt -= roll(1, 4);
+			if (pstats.s_hpt <= 0)
+			{
+				msg("a poisoned dart killed you");
+				death('d');
+			}
+			if (!ISWEARING(R_SUSTSTR) && !save(VS_POISON))
+				chg_str(-1);
+			msg("a small dart just hit you in the shoulder");
 	    }
-	break;case T_RUST:
+		break;
+	case T_RUST:
 	    msg("a gush of water hits you on the head");
 	    rust_armor(cur_armor);
     }

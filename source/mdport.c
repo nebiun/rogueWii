@@ -47,7 +47,13 @@
 #define Y_START 40
 
 typedef struct {
+	ML_Font *font;
+	ML_TextInfo *infos;
+} wiiFont_t;
+
+typedef struct {
 	GXColor color;
+	wiiFont_t ff;
 	char attr;
 	char ch;
 } wiiChar_t;
@@ -66,9 +72,15 @@ typedef struct {
 
 static wiiScreen_t wiiScreen;
 
+static ML_Font *cur_font;
+static ML_TextInfo *cur_infos;
+
 static ML_Font font;
 static ML_TextInfo infos;
-static int fontSize = -1;
+static ML_Font bigfont;
+static ML_TextInfo biginfos;
+
+static int fontInit = 0;
 static int foreground_color = C_GREEN;
 static int background_color = C_BLACK;
 
@@ -104,9 +116,12 @@ void md_putstr_at(int y, int x, char *s, int color)
 
 			if( (s[i] >= ' ') && (s[i] <= '~') )
 				p->ch = s[i];
-			else
+			else {
 				p->ch = 'X';
+			}
 			p->color = new_color;
+			p->ff.font = cur_font;
+			p->ff.infos = cur_infos;
 		}
 	}
 }
@@ -118,21 +133,21 @@ void md_putchar(int c)
 
 void md_refresh(void)
 {
-	GXColor old_color;
 	int l, c;
 
 	if(wiiScreen.screen != NULL) {
-		old_color = font.color;
 		for(l=0; l<wiiScreen.lines; l++) {
 			for(c=0; c<wiiScreen.cols; c++) {
 				wiiChar_t *p = &wiiScreen.screen[l].chars[c];
 				char s[2];
-
-				font.color = p->color;
+				GXColor old_color;
+				
+				old_color = p->ff.font->color;
+				p->ff.font->color = p->color;
 				s[0] = p->ch;
 				s[1] = '\0';
-				ML_DrawText(&font, X_START + c * infos.width, Y_START + l * infos.height, "%s", s);
-				font.color = old_color;
+				ML_DrawText(p->ff.font, X_START + c * p->ff.infos->width, Y_START + l * p->ff.infos->height, "%s", s);
+				p->ff.font->color = old_color;
 			}
 		}
 	}
@@ -144,8 +159,8 @@ int md_getchar_at(int y, int x)
 	int l, c;
 	wiiChar_t *p;
 	
-	l = (y - Y_START + infos.height - 1)/infos.height;
-	c = (x - X_START + infos.width - 1)/infos.width;
+	l = (y - Y_START + cur_infos->height - 1)/cur_infos->height;
+	c = (x - X_START + cur_infos->width - 1)/cur_infos->width;
 	if((l < wiiScreen.lines) && (c < wiiScreen.cols)) {
 		p = &wiiScreen.screen[l].chars[c];
 #if 0
@@ -272,7 +287,7 @@ void md_setcolors(int background, int foreground)
 	}
 
 	ML_SetBackgroundColor(_convertColor(background_color));
-	font.color = _convertColor(foreground_color);	
+	cur_font->color = _convertColor(foreground_color);	
 }
 
 void md_getcolors(int *background, int *foreground)
@@ -285,6 +300,29 @@ void md_getcolors(int *background, int *foreground)
 	}
 }
 
+int md_setfont(int f)
+{
+	int rtn;
+	
+	if(cur_font == &bigfont)
+		rtn = MD_FONT_BIG;
+	else
+		rtn = MD_FONT_STD;
+	
+	switch(f) {
+	case MD_FONT_BIG:
+		cur_font = &bigfont;
+		cur_infos = &biginfos;
+		break;
+	case MD_FONT_STD:
+	default:
+		cur_font = &font;
+		cur_infos = &infos;
+		break;		
+	}
+	return rtn;
+}
+
 void md_init(void)
 {
 	char s[2] = {'@', '\0'};
@@ -293,10 +331,15 @@ void md_init(void)
 	ML_InitFAT();
 	ML_EnableTextureAntiAliasing();
 
-	if(fontSize == -1) {
+	if(fontInit == 0) {
 		ML_LoadFontFromBuffer(&font, rogue_ttf, rogue_ttf_size, 16);
 		font.ftKerningEnabled = 0;
 		infos = ML_GetTextInfo(&font, "%s", s);
+		ML_LoadFontFromBuffer(&bigfont, rogue_ttf, rogue_ttf_size, 24);
+		bigfont.ftKerningEnabled = 0;
+		biginfos = ML_GetTextInfo(&bigfont, "%s", s);
+		md_setfont(MD_FONT_STD);
+		fontInit++;
 	}
 	md_setcolors(C_BLACK, C_GREEN);
 }
@@ -341,11 +384,15 @@ int md_getpid(void)
 
 char *md_gethomedir(void)
 {
+	struct stat stbuf;
 #ifndef SD_HOMEDIR
 	static char homedir[] = "sd:/apps/rogueWii";
 #else
 	static char homedir[] = SD_HOMEDIR;
 #endif
+	if((stat(homedir, &stbuf) != 0) || !S_ISDIR(stbuf.st_mode))
+		return(".");
+	
 	return(homedir);
 }
 
@@ -925,11 +972,11 @@ void md_help(void)
 		"Use 2 when asked or to select a menu item",
 		"Use 1 for the commands menu",
 		"Use + to search for traps or secret doors",
-		"Use + and A to climb down a staircase",
-		"Use + and B to do nothing (relax)",
+		"Use + and B to climb down a staircase",
+		"Use + and A to do nothing (relax)",
 		"Use - to throw something",
-		"Use - and A to climb up a staircase",
-		"Use - and B to see this help",
+		"Use - and B to climb up a staircase",
+		"Use - and A to see this help",
 		""
 	};
 	
@@ -1090,7 +1137,7 @@ void md_debug_printf(const char *fmt, ...)
 	va_end(args);
 
 	while(!Wiimote[0].Held.A) {
-		ML_DrawText(&font, X_START + 1 * infos.width, Y_START + 1 * infos.height, "%s", debug_buf);
+		ML_DrawText(cur_font, X_START + 1 * cur_infos->width, Y_START + 1 * cur_infos->height, "%s", debug_buf);
 		ML_Refresh();
 	}
 	while(Wiimote[0].Held.A)

@@ -49,7 +49,7 @@ OPTION	optlist[] = {
 		 &see_floor,	put_bool,	get_sf		},
     {"passgo",	"Follow turnings in passageways",
 		 &passgo,	put_bool,	get_bool	},
-    {"tombstone", "Print out tombstone break;case killed",
+    {"tombstone", "Print out tombstone when killed",
 		 &tombstone,	put_bool,	get_bool	},
     {"inven",	"Inventory style",
 		 &inv_type,	put_inv_t,	get_inv_t	},
@@ -262,7 +262,7 @@ get_str(void *vopt, WINDOW *win)
     getyx(win, oy, ox);
     wrefresh(win);
     
-	if( wgetnstr(win, buf, MAXINP) != ERR) {
+	if( wgetnstre(win, buf, MAXINP, NAME_CHARS) != ERR) {
 		l = strlen(buf);
 		if(l == 0)
 			return QUIT;

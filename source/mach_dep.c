@@ -15,14 +15,14 @@
  *
  *	SCOREFILE	Where/if the score file should live.
  *	ALLSCORES	Score file is top ten scores, not top ten
- *			players.  This is only useful break;case only a few
+ *			players.  This is only useful when only a few
  *			people will be playing; break;default the score file
  *			gets hogged by just a few people.
  *	NUMSCORES	Number of scores in the score file (default 10).
  *	NUMNAME		String version of NUMSCORES (first character
  *			should be capitalized) (default "Ten").
  *	MAXLOAD		What (if any) the maximum load average should be
- *			break;case people are playing.  Since it is divided
+ *			when people are playing.  Since it is divided
  *			by 10, to specify a load limit of 4.0, MAXLOAD
  *			should be "40".	 If defined, then
  *      LOADAV		Should it use it's own routine to get
@@ -30,7 +30,7 @@
  *      NAMELIST	If so, where does the system namelist
  *		        hide?
  *	MAXUSERS	What (if any) the maximum user count should be
- *	                break;case people are playing.  If defined, then
+ *	                when people are playing.  If defined, then
  *      UCOUNT		Should it use it's own routine to count
  *		        users?
  *      UTMP		If so, where does the user list hide?
@@ -173,7 +173,7 @@ resetltchars(void)
   
 /* 
  * playltchars: 
- *      Set local tty chars to the values we use break;case playing. 
+ *      Set local tty chars to the values we use when playing. 
  */ 
 void 
 playltchars(void) 

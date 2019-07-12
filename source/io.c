@@ -72,23 +72,25 @@ endmsg()
 	strcpy(huh, msgbuf);
     if (mpos)
     {
-	look(FALSE);
-	mvaddstr(0, mpos, "--More--");
-	refresh();
-	if (!msg_esc)
-	    wait_for(RC_KEY_CONTINUE);
-	else
-	{
-	    while ((ch = readchar()) != ' ')
-		if (ch == ESCAPE)
+		look(FALSE);
+		mvaddstr(0, mpos, "--More--");
+		refresh();
+		if (!msg_esc)
+			wait_for(RC_KEY_CONTINUE);
+		else
 		{
-		    msgbuf[0] = '\0';
-		    mpos = 0;
-		    newpos = 0;
-		    msgbuf[0] = '\0';
-		    return ESCAPE;
+			while ((ch = readchar()) != RC_KEY_CONTINUE) 
+			{
+				if (CHR_ESCAPE(ch))
+				{
+					msgbuf[0] = '\0';
+					mpos = 0;
+					newpos = 0;
+					msgbuf[0] = '\0';
+					return ESCAPE;
+				}
+			}
 		}
-	}
     }
     /*
      * All messages should start with uppercase, except ones that

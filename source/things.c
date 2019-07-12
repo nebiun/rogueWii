@@ -28,7 +28,8 @@ inv_name(THING *obj, bool drop)
     char *sp;
     int which;
 
-    pb = prbuf;
+	memset(prbuf,0,MAXSTR);
+	pb = prbuf;
     which = obj->o_which;
     switch (obj->o_type)
     {
@@ -136,9 +137,10 @@ inv_name(THING *obj, bool drop)
     }
     if (drop && isupper(prbuf[0]))
 		prbuf[0] = (char) tolower(prbuf[0]);
-    else if (!drop && islower(*prbuf))
-		*prbuf = (char) toupper(*prbuf);
-    prbuf[MAXSTR-1] = '\0';
+    else if (!drop && islower(prbuf[0]))
+		prbuf[0] = (char) toupper(prbuf[0]);
+    
+	prbuf[MAXSTR-1] = '\0';
     return prbuf;
 }
 
@@ -156,14 +158,14 @@ drop()
     ch = chat(hero.y, hero.x);
     if (ch != FLOOR && ch != PASSAGE)
     {
-	after = FALSE;
-	msg("there is something there already");
-	return;
+		after = FALSE;
+		msg("there is something there already");
+		return;
     }
     if ((obj = get_item("drop", 0)) == NULL)
-	return;
+		return;
     if (!dropcheck(obj))
-	return;
+		return;
     obj = leave_pack(obj, TRUE, (bool)!ISMULT(obj->o_type));
     /*
      * Link it into the level object list
@@ -173,7 +175,7 @@ drop()
     flat(hero.y, hero.x) |= F_DROPPED;
     obj->o_pos = hero;
     if (obj->o_type == AMULET)
-	amulet = FALSE;
+		amulet = FALSE;
     msg("dropped %s", inv_name(obj, TRUE));
 }
 
@@ -329,19 +331,19 @@ pick_one(struct obj_info *info, int nitems)
 
     start = info;
     for (end = &info[nitems], i = rnd(100); info < end; info++)
-	if (i < info->oi_prob)
-	    break;
+		if (i < info->oi_prob)
+			break;
     if (info == end)
     {
 #ifdef MASTER
-	if (wizard)
-	{
-	    msg("bad pick_one: %d from %d items", i, nitems);
-	    for (info = start; info < end; info++)
-		msg("%s: %d%%", info->oi_name, info->oi_prob);
-	}
+		if (wizard)
+		{
+			msg("bad pick_one: %d from %d items", i, nitems);
+			for (info = start; info < end; info++)
+			msg("%s: %d%%", info->oi_name, info->oi_prob);
+		}
 #endif
-	info = start;
+		info = start;
     }
     return (int)(info - start);
 }
@@ -359,37 +361,28 @@ static char *lastfmt, *lastarg;
 void
 discovered()
 {
-    char ch;
-    bool disc_list;
+    MENU_t obj_menu[] = {
+		{POTION, OPT_DSP, "Potions"},
+		{SCROLL, OPT_DSP, "Scrolls"},
+		{RING, OPT_DSP, "Rings"},
+		{STICK, OPT_DSP, "Wands or staffs"},
+		{'*', OPT_DSP, "All"}
+	};
+	char ch;
 
-    do {
-		disc_list = FALSE;
-		if (!terse)
-			addmsg("for ");
-		addmsg("what type");
-		if (!terse)
-			addmsg(" of object do you want a list");
-		msg("? (* for all)");
-		ch = readchar();
-		switch (ch)
-		{
-		case ESCAPE:
-			msg("");
-			return;
-		case POTION:
-		case SCROLL:
-		case RING:
-		case STICK:
-		case '*':
-			disc_list = TRUE;
-			break;
-		default:
-			if (terse)
-				msg("Not a type");
-			else
-				msg("Please type one of %c%c%c%c (ESCAPE to quit)", POTION, SCROLL, RING, STICK);
-		}
-    } while (!disc_list);
+	if (!terse)
+		addmsg("for ");
+	addmsg("what type");
+	if (!terse)
+		addmsg(" of object do you want a list");
+	msg("?");
+	
+	ch = md_stdmenu(obj_menu, NULL, sizeof(obj_menu)/sizeof(*obj_menu));
+	if(ch == RC_KEY_ABORT) {
+		msg("");
+		return;
+	}
+	
     if (ch == '*')
     {
 		print_disc(POTION);
@@ -414,7 +407,6 @@ discovered()
  */
 
 #define MAX4(a,b,c,d)	(a > b ? (a > c ? (a > d ? a : d) : (c > d ? c : d)) : (b > c ? (b > d ? b : d) : (c > d ? c : d)))
-
 
 void
 print_disc(char type)
@@ -447,7 +439,7 @@ print_disc(char type)
     obj.o_count = 1;
     obj.o_flags = 0;
     num_found = 0;
-    for (i = 0; i < maxnum; i++)
+    for (i = 0; i < maxnum; i++) {
 		if (info[order[i]].oi_know || info[order[i]].oi_guess)
 		{
 			obj.o_type = type;
@@ -455,6 +447,7 @@ print_disc(char type)
 			add_line("%s", inv_name(&obj, FALSE));
 			num_found++;
 		}
+	}
     if (num_found == 0)
 		add_line(nothing(type), NULL);
 }
@@ -498,7 +491,7 @@ add_line(char *fmt, char *arg)
     {
 	    wclear(hw);
 	    if (inv_type == INV_SLOW)
-		mpos = 0;
+			mpos = 0;
     }
     if (inv_type == INV_SLOW)
     {
@@ -647,20 +640,20 @@ nameit(THING *obj, char *type, char *which, struct obj_info *op,
 
     if (op->oi_know || op->oi_guess)
     {
-	if (obj->o_count == 1)
-	    sprintf(prbuf, "A %s ", type);
-	else
-	    sprintf(prbuf, "%d %ss ", obj->o_count, type);
-	pb = &prbuf[strlen(prbuf)];
-	if (op->oi_know)
-	    sprintf(pb, "of %s%s(%s)", op->oi_name, (*prfunc)(obj), which);
-	else if (op->oi_guess)
-	    sprintf(pb, "called %s%s(%s)", op->oi_guess, (*prfunc)(obj), which);
+		if (obj->o_count == 1)
+			sprintf(prbuf, "A %s ", type);
+		else
+			sprintf(prbuf, "%d %ss ", obj->o_count, type);
+		pb = &prbuf[strlen(prbuf)];
+		if (op->oi_know)
+			sprintf(pb, "of %s%s(%s)", op->oi_name, (*prfunc)(obj), which);
+		else if (op->oi_guess)
+			sprintf(pb, "called %s%s(%s)", op->oi_guess, (*prfunc)(obj), which);
     }
     else if (obj->o_count == 1)
-	sprintf(prbuf, "A%s %s %s", vowelstr(which), which, type);
+		sprintf(prbuf, "A%s %s %s", vowelstr(which), which, type);
     else
-	sprintf(prbuf, "%d %s %ss", obj->o_count, which, type);
+		sprintf(prbuf, "%d %s %ss", obj->o_count, which, type);
 }
 
 /*
@@ -686,10 +679,10 @@ pr_list()
     int ch;
 
     if (!terse)
-	addmsg("for ");
+		addmsg("for ");
     addmsg("what type");
     if (!terse)
-	addmsg(" of object do you want a list");
+		addmsg(" of object do you want a list");
     msg("? ");
     ch = readchar();
     switch (ch)

@@ -26,7 +26,7 @@ new_level()
     char *sp;
     int i;
 
-    player.t_flags &= ~ISHELD;	/* unhold break;case you go down just in case */
+    player.t_flags &= ~ISHELD;	/* unhold when you go down just in case */
     if (level > max_level)
 	max_level = level;
     /*

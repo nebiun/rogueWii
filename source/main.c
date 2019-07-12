@@ -113,19 +113,32 @@ intro(void)
 		md_readchar_flags = 1;
 		ch = md_readchar();
 		md_readchar_flags = 0;
-		if(ch == RC_KEY_DOWN) {
+		if(ch == RC_KEY_UP) {
 			fb++;
 			if(fb >= sizeof(colors)/sizeof(*colors))
 				fb = 0;
 			md_setcolors(colors[fb], C_CURRENT);
 		}
-		if(ch == RC_KEY_UP) {
+		if(ch == RC_KEY_DOWN) {
+			fb--;
+			if(fb < 0)
+				fb = sizeof(colors)/sizeof(*colors) - 1;
+			md_setcolors(colors[fb], C_CURRENT);
+		}		
+		if(ch == RC_KEY_LEFT) {
 			fc++;
 			if(fc >= sizeof(colors)/sizeof(*colors))
 				fc = 0;
 			md_setcolors(C_CURRENT, colors[fc]);
 			stdscr->_color = colors[fc];
 		}
+		if(ch == RC_KEY_RIGHT) {
+			fc--;
+			if(fc < 0)
+				fc = sizeof(colors)/sizeof(*colors) - 1;
+			md_setcolors(C_CURRENT, colors[fc]);
+			stdscr->_color = colors[fc];
+		}		
 		if(ch == RC_KEY_ABORT) {
 			md_setcolors(b, f);
 			stdscr->_color = f;
@@ -179,7 +192,7 @@ main(int argc, char **argv, char **envp)
 {
 	char name[MAXSTR];
     char *env;
-	int lowtime, l;
+	int lowtime, l, oldfont;
 	const char *saved;
 
 	md_init();
@@ -246,18 +259,23 @@ main(int argc, char **argv, char **envp)
 	intro();
 	infos();
 
+	oldfont = md_setfont(MD_FONT_BIG);
 	l = 5;
 	clear();
 	mvprintw(l,0,"What's your name? ");
 	refresh();
-	if( getnstre(name, sizeof(name)-1, NAME_CHARS) == ERR) {
+	if( getnstre(name, 16, NAME_CHARS) == ERR) {
 		l++;
 		rndname(name);
 		mvprintw(l,0,"Well, the Fate choose for you: %s\n",name);
-		mvprintw(N_LINES - 1,N_COLS - 1 - strlen(RS_PRESS_KEY_TO_CONTINUE2), RS_PRESS_KEY_TO_CONTINUE2);
+		refresh();
+		md_setfont(oldfont);
+		mvprintw(N_LINES - 1, N_COLS - 1 - strlen(RS_PRESS_KEY_TO_CONTINUE2), RS_PRESS_KEY_TO_CONTINUE2);
 		refresh();
 		wait_for(RC_KEY_CONTINUE);
 	}
+	else 
+		md_setfont(oldfont);
 	clear();
 	refresh();
 

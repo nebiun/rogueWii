@@ -17,7 +17,7 @@ bool again;				/* Repeating the last command */
 int  noscore;				/* Was a wizard sometime */
 bool seenstairs;			/* Have seen the stairs (for lsd) */
 bool amulet = FALSE;			/* He found the amulet */
-bool door_stop = FALSE;			/* Stop running break;case we pass a door */
+bool door_stop = FALSE;			/* Stop running when we pass a door */
 bool fight_flush = FALSE;		/* True if toilet input */
 bool firstmove = FALSE;			/* First move after setting door_stop */
 bool got_ltc = FALSE;			/* We have gotten the local tty chars */

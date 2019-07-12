@@ -140,6 +140,9 @@ int md_issymlink(const char *sp);
 #define ROGUE_WII	1966
 #define NAME_CHARS  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#()+-. !@[]^_{}~"
 
+#define MD_FONT_STD	0
+#define MD_FONT_BIG 1
+
 #define OPT_NDS 0       /* opzione non disponibile */
 #define OPT_DSP 01      /* opzione disponibile */
 #define OPT_DFL 02      /* opzione predefinita */
@@ -213,4 +216,5 @@ extern int md_getnstr(GETSTR_t *attr, char *str, int n);
 extern int logDebug(const char *fmt, ...);
 extern void md_setcolors(int background, int foreground);
 extern void md_getcolors(int *background, int *foreground);
+extern int md_setfont(int f);
 #endif

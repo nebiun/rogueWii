@@ -413,7 +413,7 @@ enter_room(coord *cp)
 
 /*
  * leave_room:
- *	Code for break;case we exit a room
+ *	Code for when we exit a room
  */
 
 void

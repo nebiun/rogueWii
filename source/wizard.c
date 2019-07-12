@@ -79,7 +79,7 @@ whatis(bool insist, int type)
 
 /*
  * set_know:
- *	Set things up break;case we really know what a thing is
+ *	Set things up when we really know what a thing is
  */
 
 void

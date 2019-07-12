@@ -41,11 +41,11 @@ randmonster(bool wander)
     mons = (wander ? wand_mons : lvl_mons);
     do
     {
-	d = level + (rnd(10) - 6);
-	if (d < 0)
-	    d = rnd(5);
-	if (d > 25)
-	    d = rnd(5) + 21;
+		d = level + (rnd(10) - 6);
+		if (d < 0)
+			d = rnd(5);
+		if (d > 25)
+			d = rnd(5) + 21;
     } while (mons[d] == 0);
     return mons[d];
 }
@@ -62,7 +62,7 @@ new_monster(THING *tp, char type, coord *cp)
     int lev_add;
 
     if ((lev_add = level - AMULETLEVEL) < 0)
-	lev_add = 0;
+		lev_add = 0;
     attach(mlist, tp);
     tp->t_type = type;
     tp->t_disguise = type;
@@ -80,13 +80,13 @@ new_monster(THING *tp, char type, coord *cp)
     tp->t_stats.s_exp = mp->m_stats.s_exp + lev_add * 10 + exp_add(tp);
     tp->t_flags = mp->m_flags;
     if (level > 29)
-	tp->t_flags |= ISHASTE;
+		tp->t_flags |= ISHASTE;
     tp->t_turn = TRUE;
     tp->t_pack = NULL;
     if (ISWEARING(R_AGGR))
-	runto(cp);
+		runto(cp);
     if (type == 'X')
-	tp->t_disguise = rnd_thing();
+		tp->t_disguise = rnd_thing();
 }
 
 /*
@@ -99,13 +99,13 @@ exp_add(THING *tp)
     int mod;
 
     if (tp->t_stats.s_lvl == 1)
-	mod = tp->t_stats.s_maxhp / 8;
+		mod = tp->t_stats.s_maxhp / 8;
     else
-	mod = tp->t_stats.s_maxhp / 6;
-    if (tp->t_stats.s_lvl > 9)
-	mod *= 20;
+		mod = tp->t_stats.s_maxhp / 6;
+	if (tp->t_stats.s_lvl > 9)
+		mod *= 20;
     else if (tp->t_stats.s_lvl > 6)
-	mod *= 4;
+		mod *= 4;
     return mod;
 }
 
@@ -123,28 +123,28 @@ wanderer()
     tp = new_item();
     do
     {
-	find_floor((struct room *) NULL, &cp, FALSE, TRUE);
+		find_floor((struct room *) NULL, &cp, FALSE, TRUE);
     } while (roomin(&cp) == proom);
     new_monster(tp, randmonster(TRUE), &cp);
     if (on(player, SEEMONST))
     {
-	standout();
-	if (!on(player, ISHALU))
-	    addch(tp->t_type);
-	else
-	    addch(rnd(26) + 'A');
-	standend();
+		standout();
+		if (!on(player, ISHALU))
+			addch(tp->t_type);
+		else
+			addch(rnd(26) + 'A');
+		standend();
     }
     runto(&tp->t_pos);
 #ifdef MASTER
     if (wizard)
-	msg("started a wandering %s", monsters[tp->t_type-'A'].m_name);
+		msg("started a wandering %s", monsters[tp->t_type-'A'].m_name);
 #endif
 }
 
 /*
  * wake_monster:
- *	What to do break;case the hero steps next to a monster
+ *	What to do when the hero steps next to a monster
  */
 THING *
 wake_monster(int y, int x)
@@ -155,55 +155,57 @@ wake_monster(int y, int x)
 
 #ifdef MASTER
     if ((tp = moat(y, x)) == NULL)
-	msg("can't find monster in wake_monster");
+		msg("can't find monster in wake_monster");
 #else
     tp = moat(y, x);
-    if (tp == NULL) 	 	 
-	endwin(), abort(); 
+    if (tp == NULL) {	 	 
+		endwin();
+		abort();
+	}		
 #endif
     ch = tp->t_type;
     /*
      * Every time he sees mean monster, it might start chasing him
      */
-    if (!on(*tp, ISRUN) && rnd(3) != 0 && on(*tp, ISMEAN) && !on(*tp, ISHELD)
-	&& !ISWEARING(R_STEALTH) && !on(player, ISLEVIT))
+    if (!on(*tp, ISRUN) && rnd(3) != 0 && on(*tp, ISMEAN) && !on(*tp, ISHELD) &&
+	    !ISWEARING(R_STEALTH) && !on(player, ISLEVIT))
     {
-	tp->t_dest = &hero;
-	tp->t_flags |= ISRUN;
+		tp->t_dest = &hero;
+		tp->t_flags |= ISRUN;
     }
-    if (ch == 'M' && !on(player, ISBLIND) && !on(player, ISHALU)
-	&& !on(*tp, ISFOUND) && !on(*tp, ISCANC) && on(*tp, ISRUN))
+    if (ch == 'M' && !on(player, ISBLIND) && !on(player, ISHALU) &&
+		!on(*tp, ISFOUND) && !on(*tp, ISCANC) && on(*tp, ISRUN))
     {
         rp = proom;
-	if ((rp != NULL && !(rp->r_flags & ISDARK))
-	    || dist(y, x, hero.y, hero.x) < LAMPDIST)
-	{
-	    tp->t_flags |= ISFOUND;
-	    if (!save(VS_MAGIC))
-	    {
-		if (on(player, ISHUH))
-		    lengthen(unconfuse, spread(HUHDURATION));
-		else
-		    fuse(unconfuse, 0, spread(HUHDURATION), AFTER);
-		player.t_flags |= ISHUH;
-		mname = set_mname(tp);
-		addmsg("%s", mname);
-		if (strcmp(mname, "it") != 0)
-		    addmsg("'");
-		msg("s gaze has confused you");
-	    }
-	}
+		if ((rp != NULL && !(rp->r_flags & ISDARK)) ||
+			dist(y, x, hero.y, hero.x) < LAMPDIST)
+		{
+			tp->t_flags |= ISFOUND;
+			if (!save(VS_MAGIC))
+			{
+				if (on(player, ISHUH))
+					lengthen(unconfuse, spread(HUHDURATION));
+				else
+					fuse(unconfuse, 0, spread(HUHDURATION), AFTER);
+				player.t_flags |= ISHUH;
+				mname = set_mname(tp);
+				addmsg("%s", mname);
+				if (strcmp(mname, "it") != 0)
+					addmsg("'");
+				msg("s gaze has confused you");
+			}
+		}
     }
     /*
      * Let greedy ones guard gold
      */
     if (on(*tp, ISGREED) && !on(*tp, ISRUN))
     {
-	tp->t_flags |= ISRUN;
-	if (proom->r_goldval)
-	    tp->t_dest = &proom->r_gold;
-	else
-	    tp->t_dest = &hero;
+		tp->t_flags |= ISRUN;
+		if (proom->r_goldval)
+			tp->t_dest = &proom->r_gold;
+		else
+			tp->t_dest = &hero;
     }
     return tp;
 }
@@ -217,7 +219,7 @@ void
 give_pack(THING *tp)
 {
     if (level >= max_level && rnd(100) < monsters[tp->t_type-'A'].m_carry)
-	attach(tp->t_pack, new_thing());
+		attach(tp->t_pack, new_thing());
 }
 
 /*
@@ -242,10 +244,10 @@ save(int which)
 {
     if (which == VS_MAGIC)
     {
-	if (ISRING(LEFT, R_PROTECT))
-	    which -= cur_ring[LEFT]->o_arm;
-	if (ISRING(RIGHT, R_PROTECT))
-	    which -= cur_ring[RIGHT]->o_arm;
+		if (ISRING(LEFT, R_PROTECT))
+			which -= cur_ring[LEFT]->o_arm;
+		if (ISRING(RIGHT, R_PROTECT))
+			which -= cur_ring[RIGHT]->o_arm;
     }
     return save_throw(which, &player);
 }

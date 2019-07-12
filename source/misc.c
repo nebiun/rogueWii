@@ -123,58 +123,66 @@ look(bool wakeup)
 
 	    if (door_stop && !firstmove && running)
 	    {
-		switch (runch)
-		{
+			switch (runch)
+			{
 		    case 'h':
-			if (x == ex)
-			    continue;
-		    break;case 'j':
-			if (y == sy)
-			    continue;
-		    break;case 'k':
-			if (y == ey)
-			    continue;
-		    break;case 'l':
-			if (x == sx)
-			    continue;
-		    break;case 'y':
-			if ((y + x) - sumhero >= 1)
-			    continue;
-		    break;case 'u':
-			if ((y - x) - diffhero >= 1)
-			    continue;
-		    break;case 'n':
-			if ((y + x) - sumhero <= -1)
-			    continue;
-		    break;case 'b':
-			if ((y - x) - diffhero <= -1)
-			    continue;
-		}
-		switch (ch)
-		{
+				if (x == ex)
+					continue;
+				break;
+			case 'j':
+				if (y == sy)
+					continue;
+				break;
+			case 'k':
+				if (y == ey)
+					continue;
+				break;
+			case 'l':
+				if (x == sx)
+					continue;
+				break;
+			case 'y':
+				if ((y + x) - sumhero >= 1)
+					continue;
+				break;
+			case 'u':
+				if ((y - x) - diffhero >= 1)
+					continue;
+				break;
+			case 'n':
+				if ((y + x) - sumhero <= -1)
+					continue;
+				break;
+			case 'b':
+				if ((y - x) - diffhero <= -1)
+					continue;
+				break;
+			}
+			switch (ch)
+			{
 		    case DOOR:
-			if (x == hero.x || y == hero.y)
-			    running = FALSE;
-			break;
+				if (x == hero.x || y == hero.y)
+					running = FALSE;
+				break;
 		    case PASSAGE:
-			if (x == hero.x || y == hero.y)
-			    passcount++;
-			break;
+				if (x == hero.x || y == hero.y)
+					passcount++;
+				break;
 		    case FLOOR:
 		    case '|':
 		    case '-':
 		    case ' ':
-			break;
+				break;
 		    default:
-			running = FALSE;
-			break;
-		}
+				running = FALSE;
+				break;
+			}
 	    }
 	}
     if (door_stop && !firstmove && passcount > 1)
-	running = FALSE;
+		running = FALSE;
     if (!running || !jump)
-	mvaddch(hero.y, hero.x, PLAYER);
+		mvaddch(hero.y, hero.x, PLAYER);
 # ifdef DEBUG
     done = FALSE;
 # endif /* DEBUG */
@@ -191,17 +199,17 @@ trip_ch(int y, int x, int ch)
     if (on(player, ISHALU) && after)
 	switch (ch)
 	{
-	    case FLOOR:
-	    case ' ':
-	    case PASSAGE:
-	    case '-':
-	    case '|':
-	    case DOOR:
-	    case TRAP:
+	case FLOOR:
+	case ' ':
+	case PASSAGE:
+	case '-':
+	case '|':
+	case DOOR:
+	case TRAP:
 		break;
-	    default:
+	default:
 		if (y != stairs.y || x != stairs.x || !seenstairs)
-		    ch = rnd_thing();
+			ch = rnd_thing();
 		break;
 	}
     return ch;
@@ -511,7 +519,8 @@ get_dir()
 			case 'N': 
 				delta.y =  1; delta.x =  1;
 				break;
-			case ESCAPE: 
+			case RC_KEY_ESCAPE:
+			case RC_KEY_ABORT:
 				last_dir = '\0'; 
 				reset_last(); 
 				return FALSE;

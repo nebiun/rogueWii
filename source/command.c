@@ -137,7 +137,7 @@ command()
 	     */
 	    if (count && !running)
 			count--;
-	    if (ch != 'a' && ch != ESCAPE && !(running || count || to_death))
+	    if (ch != 'a' && ch != RC_KEY_ESCAPE && !(running || count || to_death))
 	    {
 			l_last_comm = last_comm;
 			l_last_dir = last_dir;
@@ -777,22 +777,22 @@ identify()
     msg("what do you want identified? ");
     ch = readchar();
     mpos = 0;
-    if (ch == ESCAPE)
+    if (CHR_ESCAPE(ch))
     {
-	msg("");
-	return;
+		msg("");
+		return;
     }
     if (isupper(ch))
-	str = monsters[ch-'A'].m_name;
+		str = monsters[ch-'A'].m_name;
     else
     {
-	str = "unknown character";
-	for (hp = ident_list; hp->h_ch != '\0'; hp++)
-	    if (hp->h_ch == ch)
-	    {
-		str = hp->h_desc;
-		break;
-	    }
+		str = "unknown character";
+		for (hp = ident_list; hp->h_ch != '\0'; hp++)
+			if (hp->h_ch == ch)
+			{
+				str = hp->h_desc;
+				break;
+			}
     }
     msg("'%s': %s", unctrl(ch), str);
 }

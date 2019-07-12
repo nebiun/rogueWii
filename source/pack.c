@@ -380,7 +380,8 @@ picky_inven()
     {
 		msg(terse ? "item: " : "which item do you wish to inventory: ");
 		mpos = 0;
-		if ((mch = readchar()) == ESCAPE)
+		mch = readchar();
+		if(CHR_ESCAPE(mch))
 		{
 			msg("");
 			return;
@@ -421,34 +422,6 @@ get_item(char *purpose, int type)
 			if (!terse)
 				addmsg("which object do you want to ");
 			addmsg(purpose);
-#ifndef ROGUE_WII
-			if (terse)
-				addmsg(" what");
-			msg("? (* for list): ");
-			ch = readchar();
-			mpos = 0;
-			/*
-			 * Give the poor player a chance to abort the command
-			 */
-			if (ch == ESCAPE)
-			{
-				reset_last();
-				after = FALSE;
-				msg("");
-				return NULL;
-			}
-			n_objs = 1;		/* normal case: person types one char */
-			if (ch == '*')
-			{
-				mpos = 0;
-				if (inventory(pack, type) == 0)
-				{
-					after = FALSE;
-					return NULL;
-				}
-				continue;
-			}
-#else
 			msg("? ");
 			n_objs = 1;	
 			mpos = 0;
@@ -465,7 +438,6 @@ get_item(char *purpose, int type)
 				return NULL;			
 			}	
 			ch = wii_ch;
-#endif	
 			for (obj = pack; obj != NULL; obj = next(obj))
 				if (obj->o_packch == ch)
 					break;
@@ -530,7 +502,7 @@ floor_at()
 
 /*
  * reset_last:
- *	Reset the last command break;case the current one is aborted
+ *	Reset the last command when the current one is aborted
  */
 
 void

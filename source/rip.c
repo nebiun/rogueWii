@@ -41,6 +41,7 @@ score(int amount, int flags, char monst)
     SCORE *sc2;
     SCORE *top_ten, *endp;
 	char buf[MAXSTR];
+	int start_col = 4;
 # ifdef MASTER
     int prflags = 0;
 # endif
@@ -113,9 +114,9 @@ score(int amount, int flags, char monst)
     l = 0;
 	if (flags != -1)
 		l++;
-    mvprintw(l++,10,"Top %s %s:", Numname, allscore ? "Scores" : "Rogueists");
+    mvprintw(l++,start_col,"Top %s %s:", Numname, allscore ? "Scores" : "Rogueists");
 	l++;
-    mvprintw(l++,10,"   Score Name");
+    mvprintw(l++,start_col,"   Score Name");
 	l++;
     for (scp = top_ten; scp < endp; scp++)
     {
@@ -130,7 +131,7 @@ score(int amount, int flags, char monst)
 				strcat(buf, killname((char) scp->sc_monster, TRUE));
 			}
 			strcat(buf,".");
-            mvprintw(l++,10,"%s",buf);
+            mvprintw(l++,start_col,"%s",buf);
 		}
 		else
 			break;
@@ -146,7 +147,7 @@ score(int amount, int flags, char monst)
 
 /*
  * death:
- *	Do something really fun break;case he dies
+ *	Do something really fun when he dies
  */
 
 void
@@ -156,58 +157,56 @@ death(char monst)
     struct tm *lt;
     static time_t date;
     struct tm *localtime();
+	int oldfont;
+	int start_line = 1;
 
     signal(SIGINT, SIG_IGN);
     purse -= purse / 10;
     signal(SIGINT, leave);
     clear();
     killer = killname(monst, FALSE);
-    if (!tombstone)
-    {
-		mvprintw(LINES - 2, 0, "Killed by ");
-		killer = killname(monst, FALSE);
-		if (monst != 's' && monst != 'h')
-			printw("a%s ", vowelstr(killer));
-		printw("%s with %d gold", killer, purse);
-    }
-    else
-    {
-		time(&date);
-		lt = localtime(&date);
-		mvaddstr(8,0, "                       __________\n");
-		addstr("                      /          \\\n");
-		addstr("                     /    REST    \\\n");
-		addstr("                    /      IN      \\\n");
-		addstr("                   /     PEACE      \\\n");
-		addstr("                  /                  \\\n");
-		addstr("                  |                  |\n");
-		addstr("                  |                  |\n");
-		addstr("                  |   killed by a    |\n");
-		addstr("                  |                  |\n");
-		addstr("                  |       1980       |\n");
-		addstr("                 *|     *  *  *      | *\n");
-		addstr("         ________)/\\\\_//(\\/(/\\)/\\//\\/|_)_______\n");
-	
-		mvaddstr(17, center(killer), killer);
-		if (monst == 's' || monst == 'h')
-			mvaddch(16, 32, ' ');
-		else
-			mvaddstr(16, 33, vowelstr(killer));
-		mvaddstr(14, center(whoami), whoami);
-		sprintf(prbuf, "%d Au", purse);
-		move(15, center(prbuf));
-		addstr(prbuf);
-		sprintf(prbuf, "%4d", 1900+lt->tm_year);
-		mvaddstr(18, 26, prbuf);
-    }
-    mvaddstr(LINES - 1, 0, RS_PRESS_KEY_TO_CONTINUE);
+	oldfont = md_setfont(MD_FONT_BIG);
+	time(&date);
+	lt = localtime(&date);
+	mvaddstr(start_line,0, "                       __________\n");
+	addstr("                      /          \\\n");
+	addstr("                     /    REST    \\\n");
+	addstr("                    /      IN      \\\n");
+	addstr("                   /     PEACE      \\\n");
+	addstr("                  /                  \\\n");
+	addstr("                  |                  |\n");
+	addstr("                  |                  |\n");
+	addstr("                  |   killed by a    |\n");
+	addstr("                  |                  |\n");
+	addstr("                  |       1980       |\n");
+	addstr("                 *|     *  *  *      | *\n");
+	addstr("         ________)/\\\\_//(\\/(/\\)/\\//\\/|_)_______\n");
+
+	mvaddstr(start_line + 9, center(killer), killer);
+	if (monst == 's' || monst == 'h')
+		mvaddch(start_line + 8, 32, ' ');
+	else
+		mvaddstr(start_line + 8, 33, vowelstr(killer));
+	mvaddstr(start_line + 6, center(whoami), whoami);
+	sprintf(prbuf, "%d Au", purse);
+	move(start_line + 7, center(prbuf));
+	addstr(prbuf);
+	sprintf(prbuf, "%4d", 1900+lt->tm_year);
+	mvaddstr(start_line + 10, 26, prbuf);
+	refresh();
+	md_setfont(oldfont);
+    mvprintw(N_LINES - 1, N_COLS - 1 - strlen(RS_PRESS_KEY_TO_CONTINUE2), RS_PRESS_KEY_TO_CONTINUE);
 	refresh();
 	wait_for(RC_KEY_CONTINUE);
     clear();
+	oldfont = md_setfont(MD_FONT_BIG);
 	score(purse, amulet ? 3 : 0, monst);
-	mvaddstr(LINES - 1, 0 , RS_PRESS_KEY_TO_CONTINUE);
+	refresh();
+	md_setfont(oldfont);
+	mvprintw(N_LINES - 1, N_COLS - 1 - strlen(RS_PRESS_KEY_TO_CONTINUE2), RS_PRESS_KEY_TO_CONTINUE);
 	refresh();
 	wait_for(RC_KEY_CONTINUE);
+	
 	endwin();
 	resetltchars();
 	delwin(stdscr);
@@ -264,63 +263,71 @@ total_winner()
     oldpurse = purse;
     for (obj = pack; obj != NULL; obj = next(obj))
     {
-	switch (obj->o_type)
-	{
-	    case FOOD:
-		worth = 2 * obj->o_count;
-	    break;case WEAPON:
-		worth = weap_info[obj->o_which].oi_worth;
-		worth *= 3 * (obj->o_hplus + obj->o_dplus) + obj->o_count;
-		obj->o_flags |= ISKNOW;
-	    break;case ARMOR:
-		worth = arm_info[obj->o_which].oi_worth;
-		worth += (9 - obj->o_arm) * 100;
-		worth += (10 * (a_class[obj->o_which] - obj->o_arm));
-		obj->o_flags |= ISKNOW;
-	    break;case SCROLL:
-		worth = scr_info[obj->o_which].oi_worth;
-		worth *= obj->o_count;
-		op = &scr_info[obj->o_which];
-		if (!op->oi_know)
-		    worth /= 2;
-		op->oi_know = TRUE;
-	    break;case POTION:
-		worth = pot_info[obj->o_which].oi_worth;
-		worth *= obj->o_count;
-		op = &pot_info[obj->o_which];
-		if (!op->oi_know)
-		    worth /= 2;
-		op->oi_know = TRUE;
-	    break;case RING:
-		op = &ring_info[obj->o_which];
-		worth = op->oi_worth;
-		if (obj->o_which == R_ADDSTR || obj->o_which == R_ADDDAM ||
-		    obj->o_which == R_PROTECT || obj->o_which == R_ADDHIT)
+		switch (obj->o_type)
 		{
-			if (obj->o_arm > 0)
-			    worth += obj->o_arm * 100;
-			else
-			    worth = 10;
+		case FOOD:
+			worth = 2 * obj->o_count;
+			break;
+		case WEAPON:
+			worth = weap_info[obj->o_which].oi_worth;
+			worth *= 3 * (obj->o_hplus + obj->o_dplus) + obj->o_count;
+			obj->o_flags |= ISKNOW;
+			break;
+		case ARMOR:
+			worth = arm_info[obj->o_which].oi_worth;
+			worth += (9 - obj->o_arm) * 100;
+			worth += (10 * (a_class[obj->o_which] - obj->o_arm));
+			obj->o_flags |= ISKNOW;
+			break;
+		case SCROLL:
+			worth = scr_info[obj->o_which].oi_worth;
+			worth *= obj->o_count;
+			op = &scr_info[obj->o_which];
+			if (!op->oi_know)
+				worth /= 2;
+			op->oi_know = TRUE;
+			break;
+		case POTION:
+			worth = pot_info[obj->o_which].oi_worth;
+			worth *= obj->o_count;
+			op = &pot_info[obj->o_which];
+			if (!op->oi_know)
+				worth /= 2;
+			op->oi_know = TRUE;
+			break;
+		case RING:
+			op = &ring_info[obj->o_which];
+			worth = op->oi_worth;
+			if (obj->o_which == R_ADDSTR || obj->o_which == R_ADDDAM ||
+				obj->o_which == R_PROTECT || obj->o_which == R_ADDHIT)
+			{
+				if (obj->o_arm > 0)
+					worth += obj->o_arm * 100;
+				else
+					worth = 10;
+			}
+			if (!(obj->o_flags & ISKNOW))
+				worth /= 2;
+			obj->o_flags |= ISKNOW;
+			op->oi_know = TRUE;
+			break;
+		case STICK:
+			op = &ws_info[obj->o_which];
+			worth = op->oi_worth;
+			worth += 20 * obj->o_charges;
+			if (!(obj->o_flags & ISKNOW))
+				worth /= 2;
+			obj->o_flags |= ISKNOW;
+			op->oi_know = TRUE;
+			break;
+		case AMULET:
+			worth = 1000;
+			break;
 		}
-		if (!(obj->o_flags & ISKNOW))
-		    worth /= 2;
-		obj->o_flags |= ISKNOW;
-		op->oi_know = TRUE;
-	    break;case STICK:
-		op = &ws_info[obj->o_which];
-		worth = op->oi_worth;
-		worth += 20 * obj->o_charges;
-		if (!(obj->o_flags & ISKNOW))
-		    worth /= 2;
-		obj->o_flags |= ISKNOW;
-		op->oi_know = TRUE;
-	    break;case AMULET:
-		worth = 1000;
-	}
-	if (worth < 0)
-	    worth = 0;
-	printw("%c) %5d  %s\n", obj->o_packch, worth, inv_name(obj, FALSE));
-	purse += worth;
+		if (worth < 0)
+			worth = 0;
+		printw("%c) %5d  %s\n", obj->o_packch, worth, inv_name(obj, FALSE));
+		purse += worth;
     }
     printw("   %5d  Gold Pieces          ", oldpurse);
     refresh();
@@ -339,35 +346,37 @@ killname(char monst, bool doart)
     char *sp;
     bool article;
     static struct h_list nlist[] = {
-	{'a',	"arrow",		TRUE},
-	{'b',	"bolt",			TRUE},
-	{'d',	"dart",			TRUE},
-	{'h',	"hypothermia",		FALSE},
-	{'s',	"starvation",		FALSE},
-	{'\0'}
+		{'a',	"arrow",		TRUE},
+		{'b',	"bolt",			TRUE},
+		{'d',	"dart",			TRUE},
+		{'h',	"hypothermia",	FALSE},
+		{'s',	"starvation",	FALSE},
+		{'\0'}
     };
 
     if (isupper(monst))
     {
-	sp = monsters[monst-'A'].m_name;
-	article = TRUE;
+		sp = monsters[monst-'A'].m_name;
+		article = TRUE;
     }
     else
     {
-	sp = "Wally the Wonder Badger";
-	article = FALSE;
-	for (hp = nlist; hp->h_ch; hp++)
-	    if (hp->h_ch == monst)
-	    {
-		sp = hp->h_desc;
-		article = hp->h_print;
-		break;
-	    }
+		sp = "Wally the Wonder Badger";
+		article = FALSE;
+		for (hp = nlist; hp->h_ch; hp++) 
+		{
+			if (hp->h_ch == monst)
+			{
+				sp = hp->h_desc;
+				article = hp->h_print;
+				break;
+			}
+		}
     }
     if (doart && article)
-	sprintf(prbuf, "a%s ", vowelstr(sp));
+		sprintf(prbuf, "a%s ", vowelstr(sp));
     else
-	prbuf[0] = '\0';
+		prbuf[0] = '\0';
     strcat(prbuf, sp);
     return prbuf;
 }

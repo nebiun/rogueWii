@@ -168,7 +168,7 @@
 #define ISHELD	0000400		/* creature has been held */
 #define ISHUH	0001000		/* creature is confused */
 #define ISINVIS	0002000		/* creature is invisible */
-#define ISMEAN	0004000		/* creature can wake break;case player enters room */
+#define ISMEAN	0004000		/* creature can wake when player enters room */
 #define ISHALU	0004000		/* hero is on acid trip */
 #define ISREGEN	0010000		/* creature can regenerate */
 #define ISRUN	0020000		/* creature is running at the player */

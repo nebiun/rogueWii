@@ -46,7 +46,7 @@ doctor()
 
 /*
  * Swander:
- *	Called break;case it is time to start rolling for wandering monsters
+ *	Called when it is time to start rolling for wandering monsters
  */
 void
 swander()

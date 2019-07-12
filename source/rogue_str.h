@@ -37,6 +37,7 @@
 #define RS_PRESS_KEY_TO_CONTINUE2       "--Press 2 to continue--"
 #define RS_PRESS_KEY_TO_EXIT       		"[Press HOME to exit]"
 
+#define CHR_ESCAPE(x)		(((x) == RC_KEY_ABORT) || ((x) == RC_KEY_ESCAPE))
 #define CHR_CTRL(x)	((x) & 0x1f)
 #define CHR_UP(x)	((((x) >= 'a') && ((x) <= 'z')) ? ('A' + ((x) - 'a')) : (x))
 /* Commands */
