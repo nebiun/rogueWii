@@ -13,7 +13,7 @@
  * msg:
  *	Display a message at the top of the screen.
  */
-#define MAXMSG	(NUMCOLS - sizeof "--More--")
+#define MAXMSG	(NUMCOLS - sizeof(RS_MORE_MSG))
 
 static char msgbuf[2*MAXMSG+1];
 static int newpos = 0;
@@ -29,10 +29,10 @@ msg(char *fmt, ...)
      */
     if (*fmt == '\0')
     {
-	move(0, 0);
-	clrtoeol();
-	mpos = 0;
-	return ~ESCAPE;
+		move(0, 0);
+		clrtoeol();
+		mpos = 0;
+		return ~ESCAPE;
     }
     /*
      * break;default add to the message and flush it out
@@ -66,31 +66,14 @@ addmsg(char *fmt, ...)
 int
 endmsg()
 {
-    char ch;
-
     if (save_msg)
-	strcpy(huh, msgbuf);
+		strcpy(huh, msgbuf);
     if (mpos)
     {
 		look(FALSE);
-		mvaddstr(0, mpos, "--More--");
+		mvaddstr(0, mpos, RS_MORE_MSG);
 		refresh();
-		if (!msg_esc)
-			wait_for(RC_KEY_CONTINUE);
-		else
-		{
-			while ((ch = readchar()) != RC_KEY_CONTINUE) 
-			{
-				if (CHR_ESCAPE(ch))
-				{
-					msgbuf[0] = '\0';
-					mpos = 0;
-					newpos = 0;
-					msgbuf[0] = '\0';
-					return ESCAPE;
-				}
-			}
-		}
+		wait_for(RC_KEY_CONTINUE);
     }
     /*
      * All messages should start with uppercase, except ones that
@@ -149,11 +132,11 @@ step_ok(int ch)
  *	Reads and returns a character, checking for gross input errors
  */
 char
-readchar()
+readchar(int flg)
 {
     char ch;
 
-    ch = (char) md_readchar();
+	ch = (char) md_readchar(flg);
 
     if (ch == 3)
     {
@@ -193,7 +176,6 @@ status()
     if (s_hp == pstats.s_hpt && s_exp == pstats.s_exp && s_pur == purse
 	&& s_arm == temp && s_str == pstats.s_str && s_lvl == level
 	&& s_hungry == hungry_state
-	&& !stat_msg
 	)
 	    return;
 
@@ -202,10 +184,10 @@ status()
     getyx(stdscr, oy, ox);
     if (s_hp != max_hp)
     {
-	temp = max_hp;
-	s_hp = max_hp;
-	for (hpwidth = 0; temp; hpwidth++)
-	    temp /= 10;
+		temp = max_hp;
+		s_hp = max_hp;
+		for (hpwidth = 0; temp; hpwidth++)
+			temp /= 10;
     }
 
     /*
@@ -218,23 +200,12 @@ status()
     s_exp = pstats.s_exp;
     s_hungry = hungry_state;
 
-    if (stat_msg)
-    {
-	move(0, 0);
-        msg("Level: %d  Gold: %-5d  Hp: %*d(%*d)  Str: %2d(%d)  Arm: %-2d  Exp: %d/%ld  %s",
-	    level, purse, hpwidth, pstats.s_hpt, hpwidth, max_hp, pstats.s_str,
-	    max_stats.s_str, 10 - s_arm, pstats.s_lvl, pstats.s_exp,
-	    state_name[hungry_state]);
-    }
-    else
-    {
 	move(STATLINE, 0);
 
-        printw("Level: %d  Gold: %-5d  Hp: %*d(%*d)  Str: %2d(%d)  Arm: %-2d  Exp: %d/%d  %s",
-	    level, purse, hpwidth, pstats.s_hpt, hpwidth, max_hp, pstats.s_str,
-	    max_stats.s_str, 10 - s_arm, pstats.s_lvl, pstats.s_exp,
-	    state_name[hungry_state]);
-    }
+	printw(" Level: %d  Gold: %-5d  Hp: %*d(%*d)  Str: %2d(%d)  Arm: %-2d  Exp: %d/%d  %s",
+		level, purse, hpwidth, pstats.s_hpt, hpwidth, max_hp, pstats.s_str,
+		max_stats.s_str, 10 - s_arm, pstats.s_lvl, pstats.s_exp,
+		state_name[hungry_state]);
 
     clrtoeol();
     move(oy, ox);
@@ -249,16 +220,14 @@ wait_for(int ch)
 {
     register char c;
 
-    md_readchar_flags = 1;
 	if (ch == '\n') {
-        while ((c = readchar()) != '\n' && c != '\r')
+		while ((c = readchar(1)) != '\n' && c != '\r')
 			continue;
     }
 	else {
-        while (readchar() != ch)
+		while (readchar(1) != ch)
 			continue;
 	}
-	md_readchar_flags = 0;
 }
 
 /*

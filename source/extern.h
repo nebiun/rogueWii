@@ -52,32 +52,26 @@
  * Now all the global variables
  */
 
-extern bool	got_ltc, in_shell;
+extern bool god_mode;
 extern int	wizard;
 extern char	fruit[], prbuf[], whoami[];
-extern int orig_dsusp;
 extern FILE	*scoreboard;
 
 /*
  * Function types
  */
 
-void    auto_save(int);
 void	come_down();
 void	doctor();
 void	end_line();
-void    endit(int sig);
 void	fatal();
-void	getltchars();
 void	land();
 void    leave(int);
 void	my_exit();
 void	nohaste();
 void	playit();
-void    playltchars(void);
 void	print_disc(char);
 void    quit(int);
-void    resetltchars(void);
 void	rollwand();
 void	runners();
 void	set_order();
@@ -101,34 +95,19 @@ int	checkout();
 
 int	md_chmod(const char *filename, int mode);
 char	*md_crypt(char *key, char *salt);
-int	md_dsuspchar();
-int	md_erasechar();
 char	*md_gethomedir();
-char	*md_getusername();
 int	md_getuid();
-char	*md_getpass(char *prompt);
-int	md_getpid();
 char	*md_getrealname(int uid);
 void	md_init();
 int	md_killchar();
 void	md_normaluser();
 void	md_raw_standout();
 void	md_raw_standend();
-extern int	md_readchar(void);
-int	md_setdsuspchar(int c);
-int	md_shellescape();
-void	md_sleep(int s);
-int	md_suspchar();
+extern int md_readchar(int f);
 int	md_hasclreol();
 int	md_unlink(const char *file);
 int	md_unlink_open_file(const char *file, FILE *inf);
-void md_tstpsignal();
 void md_tstphold();
-void md_tstpresume();
-void md_ignoreallsignals();
-void md_onsignal_autosave();
-void md_onsignal_exit();
-void md_onsignal_default();
 int md_issymlink(const char *sp);
 
 /*
@@ -139,6 +118,7 @@ int md_issymlink(const char *sp);
  */
 #define ROGUE_WII	1966
 #define NAME_CHARS  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#()+-. !@[]^_{}~"
+#define FAVORITE_FRUIT  "Prune"
 
 #define MD_FONT_STD	0
 #define MD_FONT_BIG 1
@@ -203,8 +183,8 @@ typedef struct {
 	int     abort_keyval;
 } GETSTR_t;
 
-extern int md_readchar_flags;
 extern int md_screen_create(int lines, int cols);
+extern void md_putchar_at(int y, int x, char c, int color);
 extern void md_putstr_at(int y, int x, char *s, int color);
 extern void md_debug_printf(const char *fmt, ...);
 extern void md_refresh(void);
@@ -216,5 +196,6 @@ extern int md_getnstr(GETSTR_t *attr, char *str, int n);
 extern int logDebug(const char *fmt, ...);
 extern void md_setcolors(int background, int foreground);
 extern void md_getcolors(int *background, int *foreground);
+extern int md_get_altcolor(void);
 extern int md_setfont(int f);
 #endif

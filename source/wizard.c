@@ -137,17 +137,17 @@ create_obj()
 
     obj = new_item();
     msg("type of item: ");
-    obj->o_type = readchar();
+	obj->o_type = readchar(0);
     mpos = 0;
     msg("which %c do you want? (0-f)", obj->o_type);
-    obj->o_which = (isdigit((ch = readchar())) ? ch - '0' : ch - 'a' + 10);
+	obj->o_which = (isdigit((ch = readchar(0))) ? ch - '0' : ch - 'a' + 10);
     obj->o_group = 0;
     obj->o_count = 1;
     mpos = 0;
     if (obj->o_type == WEAPON || obj->o_type == ARMOR)
     {
 		msg("blessing? (+,-,n)");
-		bless = readchar();
+		bless = readchar(0);
 		mpos = 0;
 		if (bless == '-')
 			obj->o_flags |= ISCURSED;
@@ -177,7 +177,7 @@ create_obj()
 		case R_ADDHIT:
 		case R_ADDDAM:
 			msg("blessing? (+,-,n)");
-			bless = readchar();
+			bless = readchar(0);
 			mpos = 0;
 			if (bless == '-')
 				obj->o_flags |= ISCURSED;
@@ -209,7 +209,7 @@ void
 teleport()
 {
     static coord c;
-
+	
     mvaddch(hero.y, hero.x, floor_at());
     find_floor((struct room *) NULL, &c, FALSE, TRUE);
     if (roomin(&c) != proom)
@@ -223,7 +223,11 @@ teleport()
 		hero = c;
 		look(TRUE);
     }
-    mvaddch(hero.y, hero.x, PLAYER);
+	
+	wsetcurcolor(stdscr,wgetaltcolor(stdscr));
+	mvaddch(hero.y, hero.x, PLAYER);
+	wsetcurcolor(stdscr,wgetcolor(stdscr));
+
     /*
      * turn off ISHELD in case teleportation was done while fighting
      * a Flytrap
@@ -247,13 +251,15 @@ teleport()
 int
 passwd()
 {
+/* Nebiun: must be rewrite this
     char *sp, c;
     static char buf[MAXSTR];
 
     msg("wizard's Password:");
     mpos = 0;
     sp = buf;
-    while ((c = readchar()) != '\n' && c != '\r' && c != ESCAPE)
+
+	while ((c = readchar(0)) != '\n' && c != '\r' && c != ESCAPE)
 	if (c == md_killchar())
 	    sp = buf;
 	else if (c == md_erasechar() && sp > buf)
@@ -264,6 +270,8 @@ passwd()
 	return FALSE;
     *sp = '\0';
     return (strcmp(PASSWD, md_crypt(buf, "mT")) == 0);
+*/
+	return 0;
 }
 
 /*

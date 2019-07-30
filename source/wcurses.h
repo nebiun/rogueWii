@@ -4,16 +4,23 @@
 #include <stdarg.h>
 #include <MLlib.h>
 
-#define C_CURRENT	-1
-#define C_BLACK		0x00000000
-#define C_RED		0x00000080
-#define C_GREEN		0x0080ff00
-#define C_YELLOW	0x0000ffd7
-#define C_BLUE		0x00800000
-#define C_MAGENTA	0x00800080
-#define C_CYAN		0x00ffff00
-#define C_WHITE		0x00ffffff
-#define C_GREY		0x00808080
+#define C_CURRENT		-1
+#define C_BLACK			0x000000
+#define C_RED			0xff0000
+#define C_GREEN			0x008000
+#define C_YELLOW		0xffff00
+#define C_BLUE			0x0000ff
+#define C_MAGENTA		0xff00ff
+#define C_CYAN			0x00ffff
+#define C_LIGHTGREY		0xd3d3d3
+#define C_DARKGREY		0xa9a9a9
+#define C_ORANGERED		0xff4500
+#define C_LIMEGREEN		0x32cd32
+#define C_GOLD			0xffd700
+#define C_DEEPSKYBLUE	0x1765b9	
+#define C_DEEPPINK		0xff1493
+#define C_DARKTURQUOISE	0x00ced1
+#define C_WHITE			0xffffff
 
 #ifndef global
 #define global extern
@@ -49,8 +56,9 @@ typedef struct {
 	attr_t  _attrs;         /* current attribute for non-space character */
 	u_int _color;
 	u_int _background;
+	u_int _altcolor;
+	u_int _curcolor;
 	lineScreen_t *_screen;
-	char *_tmpLine;
 } WINDOW;
 
 typedef struct {
@@ -117,7 +125,7 @@ extern int wrefresh(WINDOW *win);
 extern int wtouchln(WINDOW *win, int y, int n, int changed);
 
 /* pseudo-routine */
-#define mvwaddch(win,y,x,ch)            (wmove(win,y,x) == ERR ? ERR : waddch(win,ch))
+#define mvwaddch(win,y,x,ch)     		(wmove(win,y,x) == ERR ? ERR : waddch(win,ch))
 #define getcurx(win)                    ((win) ? (win)->_curx : ERR)
 #define getcury(win)                    ((win) ? (win)->_cury : ERR)
 #define getmaxy(win)                    ((win) ? ((win)->_maxy + 1) : ERR)
@@ -144,5 +152,8 @@ extern int wtouchln(WINDOW *win, int y, int n, int changed);
 #define mvinch(y,x)                     mvwinch(stdscr,y,x)
 #define getnstr(str,n)					wgetnstr(stdscr, str, n)
 #define getnstre(str, n, range)			wgetnstre(stdscr, str, n, range)
-
+#define wgetcolor(win)					((win) ? (win)->_color : ERR)
+#define wgetaltcolor(win)				((win) ? (win)->_altcolor : ERR)
+#define wgetbkgcolor(win)				((win) ? (win)->_background : ERR)
+#define wsetcurcolor(win,color)			((win) ? ((win)->_curcolor = color) : ERR)
 #endif

@@ -81,7 +81,7 @@ static ML_Font bigfont;
 static ML_TextInfo biginfos;
 
 static int fontInit = 0;
-static int foreground_color = C_GREEN;
+static int foreground_color = C_ORANGERED;
 static int background_color = C_BLACK;
 
 static GXColor _convertColor(int color)
@@ -94,41 +94,45 @@ static GXColor _convertColor(int color)
 
 		last = color;
 		newcolor = color;
-		for(i=0; i<4; i++) {
+		for(i=0; i<3; i++) {
 			cc[i] = newcolor & 0xff;
 			newcolor >>= 8;
 		}
+		cc[3] = 0x00;
 	}
-	return (GXColor){cc[0], cc[1], cc[2], cc[3]};
+	return (GXColor){cc[2], cc[1], cc[0], cc[3]};
+}
+
+void md_putchar_at(int y, int x, char c, int color)
+{
+	GXColor new_color;
+
+	if(wiiScreen.screen != NULL) {
+		new_color = _convertColor(color);
+		wiiChar_t *p = &wiiScreen.screen[y].chars[x];
+
+		if( (c >= ' ') && (c <= '~') )
+			p->ch = c;
+		else {
+			p->ch = 'X';
+		}
+		p->color = new_color;
+		p->ff.font = cur_font;
+		p->ff.infos = cur_infos;
+	}
 }
 
 void md_putstr_at(int y, int x, char *s, int color)
 {
 	int i, len;
-	GXColor new_color;
-
+	
 	if(wiiScreen.screen != NULL) {
 		len = strlen(s);
-		new_color = _convertColor(color);
 
 		for(i=0; i<len; i++) {
-			wiiChar_t *p = &wiiScreen.screen[y].chars[x+i];
-
-			if( (s[i] >= ' ') && (s[i] <= '~') )
-				p->ch = s[i];
-			else {
-				p->ch = 'X';
-			}
-			p->color = new_color;
-			p->ff.font = cur_font;
-			p->ff.infos = cur_infos;
+			md_putchar_at(y, x+i, s[i], color);
 		}
 	}
-}
-
-void md_putchar(int c)
-{
-
 }
 
 void md_refresh(void)
@@ -341,20 +345,7 @@ void md_init(void)
 		md_setfont(MD_FONT_STD);
 		fontInit++;
 	}
-	md_setcolors(C_BLACK, C_GREEN);
-}
-
-void md_onsignal_default(void)
-{
-	return;
-}
-
-void md_onsignal_exit(void)
-{
-}
-
-void md_onsignal_autosave(void)
-{
+	md_setcolors(C_BLACK, C_LIMEGREEN);
 }
 
 int md_hasclreol(void)
@@ -377,11 +368,6 @@ int md_chmod(const char *filename, int mode)
 	return( chmod(filename, mode) );
 }
 
-int md_getpid(void)
-{
-	return 77;
-}
-
 char *md_gethomedir(void)
 {
 	struct stat stbuf;
@@ -394,21 +380,6 @@ char *md_gethomedir(void)
 		return(".");
 	
 	return(homedir);
-}
-
-void md_sleep(int s)
-{
-	sleep(s);
-}
-
-char *md_getshell(void)
-{
-	return NULL;
-}
-
-int md_shellescape(void)
-{
-	return(0);
 }
 
 int directory_exists(char *dirname)
@@ -428,55 +399,9 @@ char *md_crypt(char *key, char *salt)
     return key;
 }
 
-char *md_getpass(char *prompt)
-{
-    return NULL;
-}
-
-int md_erasechar(void)
-{
-	return -1;
-}
-
 int md_killchar(void)
 {
 	return -1;
-}
-
-int md_dsuspchar(void)
-{
-	return -1;
-}
-
-int md_setdsuspchar(int c)
-{
-	return 0;
-}
-
-int md_suspchar(void)
-{
-	return 0;
-}
-
-int md_setsuspchar(int c)
-{
-	return 0;
-}
-
-void md_ignoreallsignals(void)
-{
-}
-
-void md_tstphold(void)
-{
-}
-
-void md_tstpresume(void)
-{
-}
-
-void md_tstpsignal(void)
-{
 }
 
 /*
@@ -493,7 +418,6 @@ void md_tstpsignal(void)
  *              int numelem;            - number of element in table
  */
 
-int md_readchar_flags = 0;
 /* define, macro e typedef valide per il file           */
 #define BUFLEN  128     /* dimensione buffer temporaneo */
 
@@ -787,11 +711,9 @@ int md_menu(MENU_ATTR_t *attr, MENU_t table[], int numelem)
 
 int md_menu_input(void)
 {
-	int ch = '\0';
+	int ch;
 
-	md_readchar_flags = 1;
-	ch = md_readchar();
-	md_readchar_flags = 0;
+	ch = md_readchar(1);
 
 	return ch;
 }
@@ -810,7 +732,11 @@ int md_menu_output(int y, int x, int color, const char *fmt, ...)
 	return 0;
 }
 
-static int md_get_altcolor(int color)
+/* C_BLACK, C_RED, C_GREEN, C_YELLOW, C_BLUE, C_MAGENTA, C_CYAN, C_LIGHTGREY,
+ * C_DARKGREY, C_ORANGERED, C_LIMEGREEN, C_GOLD, C_DEEPSKYBLUE, C_DEEPPINK,
+ * C_DARKTURQUOISE, C_WHITE
+ */
+int md_get_altcolor(void)
 {
 	int b, f, c;
 	
@@ -818,31 +744,52 @@ static int md_get_altcolor(int color)
 	
 	switch(b) {
 	case C_BLACK:
-		c = (color == C_WHITE) ? C_CYAN : C_WHITE;
+		c = (f == C_WHITE) ? C_CYAN : C_WHITE;
 		break;
 	case C_RED:
-		c = (color == C_WHITE) ? C_YELLOW : C_WHITE;
+		c = (f == C_BLACK || f == C_BLUE) ? C_WHITE : C_BLUE;
 		break;
 	case C_GREEN:
-		c = (color == C_BLUE) ? C_BLACK : C_BLUE;
+		c = (f == C_BLACK || f == C_BLUE) ? C_WHITE : C_BLACK;
 		break;
 	case C_YELLOW:
-		c = (color == C_BLACK) ? C_RED : C_BLACK;
+		c = (f == C_BLACK || f == C_BLUE) ? C_MAGENTA : C_BLUE;
 		break;
 	case C_BLUE:
-		c = (color == C_WHITE) ? C_CYAN : C_WHITE;
+		c = (f == C_WHITE) ? C_BLACK : C_WHITE;
 		break;		
 	case C_MAGENTA:
-		c = (color == C_WHITE) ? C_BLUE : C_WHITE;
+		c = (f == C_BLUE) ? C_BLACK : C_BLUE;
 		break;
 	case C_CYAN:
-		c = (color == C_BLUE) ? C_BLACK : C_BLUE;
+		c = (f == C_MAGENTA) ? C_GREEN : C_MAGENTA;
 		break;		
-	case C_WHITE:
-		c = (color == C_BLACK) ? C_BLUE : C_BLACK;
+	case C_LIGHTGREY:
+		c = (f == C_RED || f == C_ORANGERED) ? C_GREEN : C_RED;
 		break;
-	case C_GREY:
-		c = (color == C_BLUE) ? C_BLACK : C_BLUE;
+	case C_DARKGREY:
+		c = (f == C_GREEN || f == C_LIMEGREEN) ? C_BLUE : C_GREEN;
+		break;
+	case C_ORANGERED:
+		c = (f == C_GREEN || f == C_LIMEGREEN) ? C_WHITE : C_GREEN;
+		break;
+	case C_LIMEGREEN:
+		c = (f == C_RED || f == C_ORANGERED) ? C_BLACK : C_RED;
+		break;
+	case C_GOLD:
+		c = (f == C_BLACK || f == C_BLUE) ? C_LIMEGREEN : C_BLUE;
+		break;
+	case C_DEEPSKYBLUE:
+		c = (f == C_WHITE) ? C_BLACK : C_WHITE;
+		break;
+	case C_DEEPPINK:
+		c = (f == C_BLACK || f == C_BLUE) ? C_WHITE : C_BLUE;
+		break;
+	case C_DARKTURQUOISE:
+		c = (f == C_BLACK || f == C_BLUE) ? C_GREEN : C_BLUE;
+		break;
+	case C_WHITE:
+		c = (f == C_BLACK || f == C_BLUE) ? C_MAGENTA : C_BLACK;
 		break;
 	default:
 		c = f;
@@ -880,19 +827,14 @@ int md_stdmenu(MENU_t table[], const char *title, int numelem)
 	if(attr.title != NULL)
 		attr.flags |= MENU_SHOW_TITLE;
 	md_getcolors(NULL,&attr.color);
-	attr.alt_color = md_get_altcolor(attr.color);
+	attr.alt_color = md_get_altcolor();
 	return md_menu(&attr, table, numelem);
 }
 
 int md_cmdmenu(void)
 {
 	static MENU_t commands[] = {
-		{RC_KEY_PICKUP, OPT_DSP, "Pick-up something"},
-		{RC_KEY_FIGHT, OPT_DSP, "Fight until someone dies"},
-		{RC_KEY_MOVE, OPT_DSP, "Move without picking up"},
 		{RC_KEY_ZAP, OPT_DSP, "Zap with a staff or wand"},
-		{RC_KEY_TRAP, OPT_DSP, "Identify a trap"},
-		{RC_KEY_INVENTORY, OPT_DSP, "Inventory"},
 		{RC_KEY_QUAFF, OPT_DSP, "Quaff a potion"},
 		{RC_KEY_READ, OPT_DSP, "Read a scroll"},
 		{RC_KEY_EAT, OPT_DSP, "Eat food"},
@@ -901,9 +843,14 @@ int md_cmdmenu(void)
 		{RC_KEY_TAKEOFF, OPT_DSP, "Take off armor"},
 		{RC_KEY_PUTON, OPT_DSP, "Put on a ring"},
 		{RC_KEY_REMOVE, OPT_DSP, "Remove a ring"},
+		{RC_KEY_INVENTORY, OPT_DSP, "Inventory"},
+		{RC_KEY_TRAP, OPT_DSP, "Identify a trap"},
 		{RC_KEY_DROP, OPT_DSP, "Drop an object"},
+		{RC_KEY_PICKUP, OPT_DSP, "Pick-up something"},
 		{RC_KEY_RENAME, OPT_DSP, "Rename an object"},
 		{RC_KEY_DISPLAY, OPT_DSP, "Print out discovered object"},
+		{RC_KEY_MOVE, OPT_DSP, "Move without picking up"},
+		{RC_KEY_FIGHT, OPT_DSP, "Fight until someone dies"},
 		{RC_KEY_SAVE, OPT_DSP, "Save the game"}
 	};
 	
@@ -952,7 +899,7 @@ int md_popup(const char *str[], int n)
 	attr.screen_maxcol = wiiScreen.cols;
 	attr.title = NULL;
 	md_getcolors(NULL,&attr.color);
-	attr.alt_color = md_get_altcolor(attr.color);
+	attr.alt_color = md_get_altcolor();
 	ch = md_menu(&attr, list, n+1);
 	free(list);
 	return ch;
@@ -987,7 +934,7 @@ void md_help(void)
 #define MD_CTRL		01
 #define MD_SHIFT	02
 
-static int _md_readchar(void)
+static int _md_readchar(int f)
 {
 	int _ch_flags = MD_NONE;
 	int ch = '\0';
@@ -1002,10 +949,15 @@ static int _md_readchar(void)
 	// b = menu
 	md_refresh();
 	if(Wiimote[0].Held.Home) {
-		ch = RC_KEY_ABORT;
+		if(Wiimote[0].Held.A && Wiimote[0].Held.B) {
+			ch = RC_KEY_GODMODE;
+		}
+		else {
+			ch = RC_KEY_ABORT;
+		}
 	}
 	else {
-		if(md_readchar_flags == 0) {
+		if(f == 0) {
 			if(Wiimote[0].Held.A) {
 				_ch_flags |= MD_CTRL;
 			}
@@ -1085,7 +1037,7 @@ static int _md_readchar(void)
 			ch = RC_KEY_CONTINUE;
 		}
 
-		if(md_readchar_flags == 0) {
+		if(f == 0) {
 			if(Wiimote[0].Held.One) {
 				if( (ch = md_cmdmenu()) == -1) {
 					ch = RC_KEY_NONE;
@@ -1109,20 +1061,26 @@ static int _md_readchar(void)
 				}
 			}
 		}
+		if(f == 2) {
+			if(Wiimote[0].Held.Plus) 
+				ch = RC_KEY_SEARCH;
+			if(Wiimote[0].Held.Minus)
+				ch = RC_KEY_THROW; 
+		}
 	}
 	
 	return ch;
 }
 
-int md_readchar(void)
+int md_readchar(int f)
 {
 	int ch;
 
 	do {
-		ch = _md_readchar();
+		ch = _md_readchar(f);
 	} while(ch == '\0');
 	
-	while(_md_readchar() == ch);	// wait release
+	while(_md_readchar(0) == ch);    // wait release
 	
 	return ch;
 }

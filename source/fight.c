@@ -245,20 +245,22 @@ attack(THING *mp)
 				if (mp->t_type == 'W')
 				{
 					if (pstats.s_exp == 0)
-					death('W');		/* All levels gone */
+						death('W');     /* All levels gone */
 					if (--pstats.s_lvl == 0)
 					{
-					pstats.s_exp = 0;
-					pstats.s_lvl = 1;
+						pstats.s_exp = 0;
+						pstats.s_lvl = 1;
 					}
 					else
-					pstats.s_exp = e_levels[pstats.s_lvl-1]+1;
+						pstats.s_exp = e_levels[pstats.s_lvl-1]+1;
 					fewer = roll(1, 10);
 				}
 				else
 					fewer = roll(1, 3);
-				pstats.s_hpt -= fewer;
-				max_hp -= fewer;
+				if(!god_mode) {
+					pstats.s_hpt -= fewer;
+					max_hp -= fewer;
+				}
 				if (pstats.s_hpt <= 0)
 					pstats.s_hpt = 1;
 				if (max_hp <= 0)
@@ -272,8 +274,10 @@ attack(THING *mp)
 				 */
 				player.t_flags |= ISHELD;
 				sprintf(monsters['F'-'A'].m_stats.s_dmg,"%dx1", ++vf_hit);
-				if (--pstats.s_hpt <= 0)
-				death('F');
+				if(!god_mode) {
+					if (--pstats.s_hpt <= 0)
+						death('F');
+				}
 				break;
 			case 'L':
 				{
@@ -333,9 +337,11 @@ attack(THING *mp)
 		}
 		if (mp->t_type == 'F')
 		{
-			pstats.s_hpt -= vf_hit;
-			if (pstats.s_hpt <= 0)
-			death(mp->t_type);	/* Bye bye life ... */
+			if(!god_mode) { 
+				pstats.s_hpt -= vf_hit;
+				if (pstats.s_hpt <= 0)
+					death(mp->t_type);  /* Bye bye life ... */
+			}
 		}
 		miss(mname, (char *) NULL, FALSE);
     }
@@ -476,8 +482,10 @@ roll_em(THING *thatt, THING *thdef, THING *weap, bool hurl)
 				debug("Damage for %dx%d came out %d, dplus = %d, add_dam = %d, def_arm = %d", ndice, nsides, proll, dplus, add_dam[att->s_str], def_arm);
 #endif
 			damage = dplus + proll + add_dam[att->s_str];
-			def->s_hpt -= max(0, damage);
-			did_hit = TRUE;
+			if(!(god_mode && (def == &pstats))) {
+				def->s_hpt -= max(0, damage);
+				did_hit = TRUE;
+			}
 		}
 		if ((cp = strchr(cp, '/')) == NULL)
 			break;
@@ -533,7 +541,6 @@ hit(char *er, char *ee, bool noend)
 {
     int i;
     char *s;
-    extern char *h_names[];
 
     if (to_death)
 		return;
@@ -562,7 +569,6 @@ void
 miss(char *er, char *ee, bool noend)
 {
     int i;
-    extern char *m_names[];
 
     if (to_death)
 		return;

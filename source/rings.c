@@ -81,7 +81,7 @@ ring_on()
 
     if (!terse)
 		addmsg("you are now wearing ");
-    msg("%s (%c)", inv_name(obj, TRUE), obj->o_packch);
+    msg("%s", inv_name(obj, TRUE));
 }
 
 /*
@@ -119,7 +119,7 @@ ring_off()
 		return;
     }
     if (dropcheck(obj))
-	msg("was wearing %s(%c)", inv_name(obj, TRUE), obj->o_packch);
+	msg("was wearing %s", inv_name(obj, TRUE));
 }
 
 /*
@@ -157,7 +157,7 @@ int
 ring_eat(int hand)
 {
     THING *ring;
-    int eat;
+	int ring_eat;
     static int uses[] = {
 	 1,	/* R_PROTECT */		 1,	/* R_ADDSTR */
 	 1,	/* R_SUSTSTR */		-3,	/* R_SEARCH */
@@ -169,12 +169,12 @@ ring_eat(int hand)
     };
 
     if ((ring = cur_ring[hand]) == NULL)
-	return 0;
-    if ((eat = uses[ring->o_which]) < 0)
-	eat = (rnd(-eat) == 0);
+		return 0;
+	if ((ring_eat = uses[ring->o_which]) < 0)
+		ring_eat = (rnd(-ring_eat) == 0);
     if (ring->o_which == R_DIGEST)
-	eat = -eat;
-    return eat;
+		ring_eat = -ring_eat;
+	return ring_eat;
 }
 
 /*

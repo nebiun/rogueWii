@@ -14,25 +14,25 @@
 #include <ctype.h>
 #include "rogue.h"
 
-#define NO_WEAPON -1
+#define NO_WEAPON   -1  
 
 int group = 2;
 
 static struct init_weaps {
     char *iw_dam;	/* Damage when wielded */
     char *iw_hrl;	/* Damage when thrown */
-    char iw_launch;	/* Launching weapon */
+	short iw_launch;/* Launching weapon */
     int iw_flags;	/* Miscellaneous flags */
 } init_dam[MAXWEAPONS] = {
-    { "2x4",	"1x3",	NO_WEAPON,	0,		},	/* Mace */
-    { "3x4",	"1x2",	NO_WEAPON,	0,		},	/* Long sword */
-    { "1x1",	"1x1",	NO_WEAPON,	0,		},	/* Bow */
-    { "1x1",	"2x3",	BOW,		ISMANY|ISMISL,	},	/* Arrow */
-    { "1x6",	"1x4",	NO_WEAPON,	ISMISL|ISMISL,	},	/* Dagger */
-    { "4x4",	"1x2",	NO_WEAPON,	0,		},	/* 2h sword */
-    { "1x1",	"1x3",	NO_WEAPON,	ISMANY|ISMISL,	},	/* Dart */
-    { "1x2",	"2x4",	NO_WEAPON,	ISMANY|ISMISL,	},	/* Shuriken */
-    { "2x3",	"1x6",	NO_WEAPON,	ISMISL,		},	/* Spear */
+	{ "2x4",    "1x3",  NO_WEAPON,  0       },  /* Mace */
+	{ "3x4",    "1x2",  NO_WEAPON,  0       },  /* Long sword */
+	{ "1x1",    "1x1",  NO_WEAPON,  0       },  /* Bow */
+	{ "1x1",    "2x3",  BOW,        ISMANY|ISMISL   },  /* Arrow */
+	{ "1x6",    "1x4",  NO_WEAPON,  ISMISL|ISMISL   },  /* Dagger */
+	{ "4x4",    "1x2",  NO_WEAPON,  0       },  /* 2h sword */
+	{ "1x1",    "1x3",  NO_WEAPON,  ISMANY|ISMISL   },  /* Dart */
+	{ "1x2",    "2x4",  NO_WEAPON,  ISMANY|ISMISL   },  /* Shuriken */
+	{ "2x3",    "1x6",  NO_WEAPON,  ISMISL      },  /* Spear */
 };
 
 /*
@@ -230,21 +230,21 @@ wield()
     oweapon = cur_weapon;
     if (!dropcheck(cur_weapon))
     {
-	cur_weapon = oweapon;
-	return;
+		cur_weapon = oweapon;
+		return;
     }
     cur_weapon = oweapon;
     if ((obj = get_item("wield", WEAPON)) == NULL)
     {
 bad:
-	after = FALSE;
-	return;
+		after = FALSE;
+		return;
     }
 
     if (obj->o_type == ARMOR)
     {
-	msg("you can't wield armor");
-	goto bad;
+		msg("you can't wield armor");
+		goto bad;
     }
     if (is_current(obj))
         goto bad;
@@ -252,8 +252,8 @@ bad:
     sp = inv_name(obj, TRUE);
     cur_weapon = obj;
     if (!terse)
-	addmsg("you are now ");
-    msg("wielding %s (%c)", sp, obj->o_packch);
+		addmsg("you are now ");
+    msg("wielding %s", sp);
 }
 
 /*

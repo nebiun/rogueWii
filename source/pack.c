@@ -154,7 +154,7 @@ out:
     {
 		if (!terse)
 			addmsg("you now have ");
-		msg("%s (%c)", inv_name(obj, !terse), obj->o_packch);
+		msg("%s", inv_name(obj, !terse));
     }
 }
 
@@ -288,7 +288,6 @@ inventory(THING *list, int type)
 	}
 	wii_ch = md_stdmenu(menu, NULL, n_objs);
 	msg("");
-	msg_esc = FALSE;
 	/* freeing menu */
 	for(i=0; i<n_objs; i++) 
 	{
@@ -380,7 +379,7 @@ picky_inven()
     {
 		msg(terse ? "item: " : "which item do you wish to inventory: ");
 		mpos = 0;
-		mch = readchar();
+		mch = readchar(0);
 		if(CHR_ESCAPE(mch))
 		{
 			msg("");
@@ -390,7 +389,7 @@ picky_inven()
 		{
 			if (mch == obj->o_packch)
 			{
-				msg("%c) %s", mch, inv_name(obj, FALSE));
+				msg("%s", inv_name(obj, FALSE));
 				return;
 			}
 		}

@@ -14,27 +14,23 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <signal.h>
 #include <string.h>
 #include <dirent.h>
+#include <time.h>
 #include "rogue.h"
 #include "score.h"
 
-typedef struct stat STAT;
-
 extern char version[], encstr[];
-
-static STAT sbuf;
 
 const char *get_saved_dir()
 {
 	static char saved_dir[64] = {'\0'};
 
 	if(saved_dir[0] == '\0') {
-		char *home;
+		char *h;
 
-		home = md_gethomedir();
-		snprintf(saved_dir,sizeof(saved_dir),"%s/saved",home);
+		h = md_gethomedir();
+		snprintf(saved_dir,sizeof(saved_dir),"%s/saved",h);
 	}
 	return saved_dir;
 }
@@ -82,7 +78,7 @@ get_saved_name(const char *user)
 		}
 		ch = md_stdmenu(menu, "Available saved files", nsaved);
 		if(ch != -1) {
-			snprintf(saved_file,sizeof(saved_file),"%s/%s",get_saved_dir(),menu[ch - 'a'].entry);
+			snprintf(saved_file,sizeof(saved_file),"%s",menu[ch - 'a'].entry);
 			rtn = saved_file;
 		}
 		/* freeing menu */
@@ -106,20 +102,24 @@ get_saved_name(const char *user)
 void
 save_game()
 {
+	struct stat sbuf;
     FILE *savef;
-    auto char buf[MAXSTR];
+	char buf[MAXSTR];
 	char yesno[2];
 
     /*
      * get file name
      */
-    mpos = 0;
-over:
-    if (file_name[0] != '\0')
-    {
+	do {
+		mpos = 0;
+
+		if(file_name[0] == '\0')
+			snprintf(file_name, MAXSTR, "%s.save", whoami);
+
 		msg("save file (%s)? ", file_name);
 		if( getnstre(yesno, 1, "YN") == ERR)
 		{
+				file_name[0] = '\0';
 				msg("");
 				return;
 		}
@@ -127,69 +127,50 @@ over:
 		{
 			addstr("Yes\n");
 			refresh();
-			strcpy(buf, file_name);
-			goto gotfile;
 		}
-    }
+		else {
+			mpos = 0;
+			msg("file name: ");
+			file_name[0] = '\0';
+			if(getnstre(file_name, sizeof(buf), NAME_CHARS) == ERR)
+			{
+				msg("");
+				return;
+			}
+		}
 
-    do
-    {
-		mpos = 0;
-		msg("file name: ");
-		buf[0] = '\0';
-		if(getnstre(buf, sizeof(buf), NAME_CHARS) == ERR)
-		{
-quit_it:
-			msg("");
-			return;
-		}
-		sprintf(file_name,"%s/%s",get_saved_dir(),buf);
-		mpos = 0;
-gotfile:
+		sprintf(buf,"%s/%s",get_saved_dir(),file_name);
+
 		/*
 		 * test to see if the file exists
 		 */
-		if (stat(file_name, &sbuf) >= 0)
+		if (stat(buf, &sbuf) >= 0)
 		{
-			msg("File exists. Do you wish to overwrite it?");
 			mpos = 0;
-			if(getnstre(yesno, 1, "YN") == ERR)
-					goto quit_it;
-			if (yesno[0] == 'Y')
-					break;
-			else if (yesno[0] == 'N')
-				goto over;
-
-			msg("file name: %s", file_name);
-			md_unlink(file_name);
+			msg("File exists. Do you wish to overwrite it?");
+			if(getnstre(yesno, 1, "YN") == ERR) 
+			{
+				msg("");
+				return;
+			}
+			if (yesno[0] == 'Y') {
+				msg("file name: %s", file_name);
+				md_unlink(buf);
+			}
+			else if (yesno[0] == 'N') {
+				file_name[0] = '\0';
+			}
 		}
+	} while(file_name[0] == '\0');
 
-		if ((savef = fopen(file_name, "w")) == NULL) {
-			msg(strerror(errno));
-		}
-    } while (savef == NULL);
+	if ((savef = fopen(buf, "w")) == NULL) {
+		mpos = 0;
+		msg(strerror(errno));
+		return;
+	}
 
     save_file(savef);
-    /* NOTREACHED */
-}
-
-/*
- * auto_save:
- *	Automatically save a file.  This is used if a HUP signal is
- *	recieved
- */
-
-void
-auto_save(int sig)
-{
-    FILE *savef;
-    NOOP(sig);
-
-    md_ignoreallsignals();
-    if (file_name[0] != '\0' && ((savef = fopen(file_name, "w")) != NULL ||
-	(md_unlink_open_file(file_name, savef) >= 0 && (savef = fopen(file_name, "w")) != NULL)))
-	    save_file(savef);
-    exit(0);
+	playing = FALSE;
 }
 
 /*
@@ -201,10 +182,7 @@ void
 save_file(FILE *savef)
 {
     char buf[80];
-    mvcur(0, COLS - 1, LINES - 1, 0);
-    putchar('\n');
-    endwin();
-    resetltchars();
+
     md_chmod(file_name, 0400);
     encwrite(version, strlen(version)+1, savef);
     sprintf(buf,"%d x %d\n", LINES, COLS);
@@ -212,7 +190,6 @@ save_file(FILE *savef)
     rs_save_file(savef);
     fflush(savef);
     fclose(savef);
-    exit(0);
 }
 
 /*
@@ -221,28 +198,27 @@ save_file(FILE *savef)
  *	integrity from cheaters
  */
 bool
-restore(const char *file, char **envp)
+restore(const char *file)
 {
+	char file_path[128];
     FILE *inf;
     int syml;
-    auto char buf[MAXSTR];
-    auto STAT sbuf2;
+	char buf[MAXSTR];
+	struct stat sbuf;
     int lines, cols;
+	unsigned int rseed;
 
-	if (strcmp(file, "-r") == 0)
-		file = file_name;
+	sprintf(file_path,"%s/%s",get_saved_dir(),file);
 
-	md_tstphold();
-
-	if ((inf = fopen(file,"r")) == NULL)
+	if ((inf = fopen(file_path,"r")) == NULL)
     {
 		perror(file);
 		return FALSE;
     }
 
-	stat(file, &sbuf2);
-    syml = is_symlink(file);
-//	fflush(stdout);
+	stat(file_path, &sbuf);
+	syml = is_symlink(file_path);
+
     encread(buf, (unsigned) strlen(version) + 1, inf);
     if (strcmp(buf, version) != 0)
     {
@@ -281,16 +257,12 @@ restore(const char *file, char **envp)
 #ifdef MASTER
 	!wizard &&
 #endif
-        md_unlink_open_file(file, inf) < 0)
+		md_unlink_open_file(file_path, inf) < 0)
     {
 		printf("Cannot unlink file\n");
 		return FALSE;
     }
     mpos = 0;
-/*    printw(0, 0, "%s: %s", file, ctime(&sbuf2.st_mtime)); */
-/*
-    printw("%s: %s", file, ctime(&sbuf2.st_mtime));
-*/
     clearok(stdscr,TRUE);
     /*
      * defeat multiple restarting from the same place
@@ -298,7 +270,7 @@ restore(const char *file, char **envp)
 #ifdef MASTER
     if (!wizard)
 #endif
-	if (sbuf2.st_nlink != 1 || syml)
+	if (sbuf.st_nlink != 1 || syml)
 	{
 	    endwin();
 	    printf("\nCannot restore from a linked file\n");
@@ -311,14 +283,17 @@ restore(const char *file, char **envp)
 		printf("\n\"He's dead, Jim\"\n");
 		return FALSE;
     }
-	md_tstpresume();
     strcpy(file_name, file);
     clearok(curscr, TRUE);
-    srand(md_getpid());
-    msg("file name: %s", file);
-    playit();
-    /*NOTREACHED*/
-    return(0);
+	rseed = (unsigned int)time(NULL);
+	srand(rseed);
+	addmsg("file name: %s", file);
+    if(god_mode)
+		msg(". %s",RS_GOD_MODE);
+	else
+		msg(".");
+
+	return TRUE;
 }
 
 /*
@@ -418,12 +393,15 @@ rd_score(SCORE *top_ten)
 
 /*
  * write_scrore
- *	Read in the score file
+ *  Write in the score file
  */
 void
 wr_score(SCORE *top_ten)
 {
     unsigned int i;
+
+	if(god_mode)
+		return;
 
 	if (scoreboard == NULL)
 		return;

@@ -49,8 +49,6 @@ OPTION	optlist[] = {
 		 &see_floor,	put_bool,	get_sf		},
     {"passgo",	"Follow turnings in passageways",
 		 &passgo,	put_bool,	get_bool	},
-    {"tombstone", "Print out tombstone when killed",
-		 &tombstone,	put_bool,	get_bool	},
     {"inven",	"Inventory style",
 		 &inv_type,	put_inv_t,	get_inv_t	},
     {"name",	 "Name",
@@ -181,7 +179,7 @@ get_bool(void *vp, WINDOW *win)
     {
 		wmove(win, oy, ox);
 		wrefresh(win);
-		switch (readchar())
+		switch (readchar(0))
 		{
 		case 't':
 		case 'T':
@@ -257,12 +255,13 @@ get_str(void *vopt, WINDOW *win)
     char *opt = (char *) vopt;
     int oy, ox;
     static char buf[MAXSTR];
-	int l = 0;
 
     getyx(win, oy, ox);
     wrefresh(win);
     
 	if( wgetnstre(win, buf, MAXINP, NAME_CHARS) != ERR) {
+		int l;
+
 		l = strlen(buf);
 		if(l == 0)
 			return QUIT;
@@ -296,7 +295,7 @@ get_inv_t(void *vp, WINDOW *win)
     {
 		wmove(win, oy, ox);
 		wrefresh(win);
-		switch (readchar())
+		switch (readchar(0))
 		{
 		case 'o':
 		case 'O':
@@ -415,7 +414,7 @@ parse_opts(char *str)
 					{
 						if (islower(*str))
 							*str = (char) toupper(*str);
-						for (i = inv_t_name; i <= &inv_t_name[INV_CLEAR]; i++)
+						for (i = inv_t_name; i < &inv_t_name[INV_TYPES]; i++)
 						{
 							if (strncmp(str, *i, sp - str) == 0)
 							{

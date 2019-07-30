@@ -71,7 +71,7 @@ take_off()
 		addmsg("was");
     else
 		addmsg("you used to be");
-    msg(" wearing %c) %s", obj->o_packch, inv_name(obj, TRUE));
+    msg(" wearing %s", inv_name(obj, TRUE));
 }
 
 /*

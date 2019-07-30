@@ -15,6 +15,23 @@
 #include <string.h>
 #include "rogue.h"
 
+static char *_tr_name[NTRAPS] = {   
+	"a trapdoor",
+	"an arrow trap",
+	"a sleeping gas trap",
+	"a beartrap",
+	"a teleport trap",
+	"a poison dart trap",
+	"a rust trap",
+	"a mysterious trap"
+};
+
+static char *_inv_t_name[INV_TYPES] = {
+	"Overwrite",
+	"Slow",
+	"Clear"
+};
+
 /*
  * init_player:
  *	Roll her up
@@ -267,25 +284,36 @@ init_names()
 
     for (i = 0; i < MAXSCROLLS; i++)
     {
-	cp = prbuf;
-	nwords = rnd(3) + 2;
-	while (nwords--)
-	{
-	    nsyl = rnd(3) + 1;
-	    while (nsyl--)
-	    {
-		sp = sylls[rnd((sizeof sylls) / (sizeof (char *)))];
-		if (&cp[strlen(sp)] > &prbuf[MAXNAME])
-			break;
-		while (*sp)
-		    *cp++ = *sp++;
-	    }
-	    *cp++ = ' ';
-	}
-	*--cp = '\0';
-	s_names[i] = (char *) malloc((unsigned) strlen(prbuf)+1);
-	strcpy(s_names[i], prbuf);
+		cp = prbuf;
+		nwords = rnd(3) + 2;
+		while (nwords--)
+		{
+			nsyl = rnd(3) + 1;
+			while (nsyl--)
+			{
+				sp = sylls[rnd((sizeof sylls) / (sizeof (char *)))];
+				if (&cp[strlen(sp)] > &prbuf[MAXNAME])
+					break;
+				while (*sp)
+					*cp++ = *sp++;
+			}
+			*cp++ = ' ';
+		}
+		*--cp = '\0';
+		if(s_names[i] != NULL)
+			free(s_names[i]);
+		s_names[i] = (char *) malloc((unsigned) strlen(prbuf)+1);
+		strcpy(s_names[i], prbuf);
     }
+
+	for(i = 0; i < INV_TYPES; i++) {
+		inv_t_name[i] = malloc(strlen(_inv_t_name[i]) + 1);
+		strcpy(inv_t_name[i], _inv_t_name[i]);
+	}
+	for(i = 0; i < NTRAPS; i++) {
+		tr_name[i] = malloc(strlen(_tr_name[i]) + 1);
+		strcpy(tr_name[i], _tr_name[i]);
+	}
 }
 
 /*
@@ -298,15 +326,15 @@ init_stones()
     register int i, j;
 
     for (i = 0; i < NSTONES; i++)
-	used[i] = FALSE;
+		used[i] = FALSE;
     for (i = 0; i < MAXRINGS; i++)
     {
-	do
-	    j = rnd(NSTONES);
-	while (used[j]);
-	used[j] = TRUE;
-	r_stones[i] = stones[j].st_name;
-	ring_info[i].oi_worth += stones[j].st_value;
+		do
+			j = rnd(NSTONES);
+		while (used[j]);
+		used[j] = TRUE;
+		r_stones[i] = stones[j].st_name;
+		ring_info[i].oi_worth += stones[j].st_value;
     }
 }
 

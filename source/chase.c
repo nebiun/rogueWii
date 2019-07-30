@@ -117,7 +117,7 @@ do_chase(THING *th)
     register struct room *rer, *ree;	/* room of chaser, room of chasee */
     register int mindist = 32767, curdist;
     register bool stoprun = FALSE;	/* TRUE means we are there */
-    register bool door;
+	register bool is_door;
     register THING *obj;
     static coord this;			/* Temporary destination for chaser */
 
@@ -131,7 +131,7 @@ do_chase(THING *th)
     /*
      * We don't count doors as inside rooms for this routine
      */
-    door = (chat(th->t_pos.y, th->t_pos.x) == DOOR);
+	is_door = (chat(th->t_pos.y, th->t_pos.x) == DOOR);
     /*
      * If the object of our desire is in a different room,
      * and we are not in a corridor, run to the door nearest to
@@ -149,10 +149,10 @@ over:
 				mindist = curdist;
 			}
 		}
-		if (door)
+		if (is_door)
 		{
 			rer = &passages[flat(th->t_pos.y, th->t_pos.x) & F_PNUM];
-			door = FALSE;
+			is_door = FALSE;
 			goto over;
 		}
     }

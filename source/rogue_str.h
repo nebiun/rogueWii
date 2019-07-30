@@ -32,10 +32,15 @@
 #ifndef _rogue_str_h_
 #define _rogue_str_h_
 
+/* RELEASE */
+#define ROGUE_VERSION   "5.4.4"
+
 /* Strings */
 #define RS_PRESS_KEY_TO_CONTINUE        "[Press 2 to continue]"
 #define RS_PRESS_KEY_TO_CONTINUE2       "--Press 2 to continue--"
 #define RS_PRESS_KEY_TO_EXIT       		"[Press HOME to exit]"
+#define RS_GOD_MODE						"God mode is ON"
+#define RS_MORE_MSG						"--More--"
 
 #define CHR_ESCAPE(x)		(((x) == RC_KEY_ABORT) || ((x) == RC_KEY_ESCAPE))
 #define CHR_CTRL(x)	((x) & 0x1f)
@@ -80,7 +85,7 @@
 #define RC_KEY_REFRESH				CHR_CTRL('R')	// Redraws the screen
 #define RC_KEY_SHOWLASTMSG			CHR_CTRL('P')	// Print last message
 #define RC_KEY_ESCAPE				'\033'			// Cancel a command, prefix, count
-#define RC_KEY_TOSHELL                          '!'     // Escape to shell
+#define RC_KEY_GODMODE                          '!'     // Enter God mode 
 #define RC_KEY_QUIT                             'Q'     // Leave the game
 #define RC_KEY_SAVE                             'S'     // Save the game
 #define RC_KEY_SHOWVERSION                      'v'     // Print program version

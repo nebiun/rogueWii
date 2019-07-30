@@ -10,92 +10,73 @@
  * See the file LICENSE.TXT for full copyright and licensing information.
  */
 
+#include <string.h>
+#include <time.h>
 #include "rogue.h"
 
-bool after;				/* True if we want after daemons */
-bool again;				/* Repeating the last command */
-int  noscore;				/* Was a wizard sometime */
-bool seenstairs;			/* Have seen the stairs (for lsd) */
-bool amulet = FALSE;			/* He found the amulet */
-bool door_stop = FALSE;			/* Stop running when we pass a door */
-bool fight_flush = FALSE;		/* True if toilet input */
-bool firstmove = FALSE;			/* First move after setting door_stop */
-bool got_ltc = FALSE;			/* We have gotten the local tty chars */
-bool has_hit = FALSE;			/* Has a "hit" message pending in msg */
-bool in_shell = FALSE;			/* True if executing a shell */
-bool inv_describe = TRUE;		/* Say which way items are being used */
-bool jump = FALSE;			/* Show running as series of jumps */
-bool kamikaze = FALSE;			/* to_death really to DEATH */
-bool lower_msg = FALSE;			/* Messages should start w/lower case */
-bool move_on = FALSE;			/* Next move shouldn't pick up items */
-bool msg_esc = FALSE;			/* Check for ESC from msg's --More-- */
-bool passgo = FALSE;			/* Follow passages */
-bool playing = TRUE;			/* True until he quits */
-bool q_comm = FALSE;			/* Are we executing a 'Q' command? */
-bool running = FALSE;			/* True if player is running */
-bool save_msg = TRUE;			/* Remember last msg */
-bool see_floor = TRUE;			/* Show the lamp illuminated floor */
-bool stat_msg = FALSE;			/* Should status() print as a msg() */
-bool terse = FALSE;			/* True if we should be short */
-bool to_death = FALSE;			/* Fighting is to the death! */
-bool tombstone = TRUE;			/* Print out tombstone at end */
-#ifdef MASTER
-int wizard = FALSE;			/* True if allows wizard commands */
-#endif
-bool pack_used[26] = {			/* Is the character used in the pack? */
-    FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
-    FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
-    FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE
-};
+bool after;                     /* True if we want after daemons */
+bool again;                     /* Repeating the last command */
+int  noscore;                   /* Was a wizard sometime */
+bool seenstairs;                /* Have seen the stairs (for lsd) */
+bool amulet;					/* He found the amulet */
+bool door_stop;                 /* Stop running when we pass a door */
+bool fight_flush;               /* True if toilet input */
+bool firstmove;                 /* First move after setting door_stop */
+bool has_hit;                   /* Has a "hit" message pending in msg */
+bool inv_describe;              /* Say which way items are being used */
+bool jump;                      /* Show running as series of jumps */
+bool kamikaze;                  /* to_death really to DEATH */
+bool lower_msg;                 /* Messages should start w/lower case */
+bool move_on;                   /* Next move shouldn't pick up items */
+bool passgo;                    /* Follow passages */
+bool playing;                   /* True until he quits */
+bool q_comm;                    /* Are we executing a 'Q' command? */
+bool running;                   /* True if player is running */
+bool save_msg;                  /* Remember last msg */
+bool see_floor;                 /* Show the lamp illuminated floor */
+bool terse;                     /* True if we should be short */
+bool to_death;                  /* Fighting is to the death! */
+bool god_mode;                  /* Hero can't dead */
 
-char dir_ch;				/* Direction from last get_dir() call */
+#ifdef MASTER
+int wizard;             /* True if allows wizard commands */
+#endif
+bool pack_used[26];				/* Is the character used in the pack? */
+
+char dir_ch;					/* Direction from last get_dir() call */
 char file_name[MAXSTR];			/* Save file name */
-char huh[MAXSTR];			/* The last message printed */
+char huh[MAXSTR];				/* The last message printed */
 char *p_colors[MAXPOTIONS];		/* Colors of the potions */
 char prbuf[2*MAXSTR];			/* buffer for sprintfs */
 char *r_stones[MAXRINGS];		/* Stone settings of the rings */
-char runch;				/* Direction player is running */
+char runch;						/* Direction player is running */
 char *s_names[MAXSCROLLS];		/* Names of the scrolls */
-char take;				/* Thing she is taking */
+char take;						/* Thing she is taking */
 char whoami[MAXSTR];			/* Name of player */
 char *ws_made[MAXSTICKS];		/* What sticks are made of */
 char *ws_type[MAXSTICKS];		/* Is it a wand or a staff */
-int  orig_dsusp;			/* Original dsusp char */
-char fruit[MAXSTR] =			/* Favorite fruit */
-		{ 's', 'l', 'i', 'm', 'e', '-', 'm', 'o', 'l', 'd', '\0' };
-char home[MAXSTR] = { '\0' };		/* User's home directory */
-char *inv_t_name[] = {
-	"Overwrite",
-	"Slow",
-	"Clear"
-};
+char fruit[MAXSTR];				/* Favorite fruit */
+char home[MAXSTR] = { '\0' };	/* User's home directory */
+char *inv_t_name[INV_TYPES];
+
 char l_last_comm = '\0';		/* Last last_comm */
 char l_last_dir = '\0';			/* Last last_dir */
 char last_comm = '\0';			/* Last command typed */
 char last_dir = '\0';			/* Last direction given */
-char *tr_name[] = {			/* Names of the traps */
-	"a trapdoor",
-	"an arrow trap",
-	"a sleeping gas trap",
-	"a beartrap",
-	"a teleport trap",
-	"a poison dart trap",
-	"a rust trap",
-        "a mysterious trap"
-};
+char *tr_name[NTRAPS];          /* Names of the traps */
 
-
-int n_objs;				/* # items listed in inventory() call */
-int ntraps;				/* Number of traps on this level */
+int n_objs;						/* # items listed in inventory() call */
+int ntraps;						/* Number of traps on this level */
 int hungry_state = 0;			/* How hungry is he */
-int inpack = 0;				/* Number of things in pack */
-int inv_type = 0;			/* Type of inventory to use */
-int level = 1;				/* What level she is on */
-int max_hit;				/* Max damage done to her in to_death */
-int max_level;				/* Deepest player has gone */
-int mpos = 0;				/* Where cursor is on top line */
-int no_food = 0;			/* Number of levels without food */
-int a_class[MAXARMORS] = {		/* Armor class for each armor type */
+int inpack = 0;					/* Number of things in pack */
+int inv_type = 0;				/* Type of inventory to use */
+int level = 1;					/* What level she is on */
+int max_hit;					/* Max damage done to her in to_death */
+int max_level;					/* Deepest player has gone */
+int mpos = 0;					/* Where cursor is on top line */
+int no_food = 0;				/* Number of levels without food */
+
+int a_class[MAXARMORS] = {	/* Armor class for each armor type */		
 	8,	/* LEATHER */
 	7,	/* RING_MAIL */
 	7,	/* STUDDED_LEATHER */
@@ -120,9 +101,9 @@ int dnum;				/* Dungeon number */
 int seed;				/* Random number seed */
 int e_levels[] = {
         10L,
-	20L,
-	40L,
-	80L,
+		20L,
+		40L,
+		80L,
        160L,
        320L,
        640L,
@@ -139,7 +120,7 @@ int e_levels[] = {
    2000000L,
    4000000L,
    8000000L,
-	 0L
+		 0L
 };
 
 coord delta;				/* Change indicated to get_dir() */
@@ -160,27 +141,11 @@ THING player;				/* His stats */
 
 WINDOW *hw = NULL;			/* used as a scratch window */
 
-#define INIT_STATS { 16, 0, 1, 10, 12, "1x4", 12 }
-
-struct stats max_stats = INIT_STATS;	/* The maximum for the player */
+struct stats max_stats; 	/* The maximum for the player */
 
 struct room *oldrp;			/* Roomin(&oldpos) */
 struct room rooms[MAXROOMS];		/* One for each room -- A level */
-struct room passages[MAXPASS] =		/* One for each passage */
-{
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} },
-    { {0, 0}, {0, 0}, {0, 0}, 0, ISGONE|ISDARK, 0, {{0,0}} }
-};
+struct room passages[MAXPASS];		/* One for each passage */
 
 #define ___ 1
 #define XX 10
@@ -383,8 +348,221 @@ struct h_list helpstr[] = {
     {ESCAPE,	"	cancel command",			TRUE},
     {'S',	"	save game",				TRUE},
     {'Q',	"	quit",					TRUE},
-    {'!',	"	shell escape",				TRUE},
     {'F',	"<dir>	fight till either of you dies",		TRUE},
     {'v',	"	print version number",			TRUE},
     {0,		NULL }
 };
+
+void 
+init_globals(void)
+{
+	int i, j;
+
+	whoami[0] = '\0';
+	strcpy(fruit,FAVORITE_FRUIT);
+
+	after = FALSE;
+	again = FALSE;
+	noscore = FALSE;
+	seenstairs = FALSE;
+	amulet = FALSE;
+	door_stop = FALSE;
+	fight_flush = FALSE;
+	firstmove = FALSE;
+	has_hit = FALSE;
+	god_mode = FALSE;
+	inv_describe = TRUE;
+	jump = FALSE;
+	kamikaze = FALSE;
+	lower_msg = FALSE;
+	move_on = FALSE;
+	passgo = FALSE;
+	playing = FALSE;
+	q_comm = FALSE;
+	running = FALSE;
+	save_msg = TRUE;
+	see_floor = TRUE;
+	terse = FALSE;
+	to_death = FALSE;
+#ifdef MASTER
+	wizard = TRUE;
+#endif
+	for(i=0; i<26; i++)
+		pack_used[i] = FALSE;
+
+	dir_ch = 0;
+	file_name[0] = '\0';
+	huh[0] = '\0';
+
+	/* potions */
+	for(i=0; i<MAXPOTIONS; i++)
+		p_colors[i] = NULL;
+
+	prbuf[0] = '\0';
+
+	/* rings */
+	for(i=0; i<MAXRINGS; i++)
+		r_stones[i] = NULL;
+
+	/* release (malloc) */
+	if(release != NULL)
+		free(release);
+	release = malloc(strlen(ROGUE_VERSION) + 1);
+	strcpy(release, ROGUE_VERSION);
+
+	runch = 0;
+
+	/* scrolls (malloc) */
+	for(i = 0; i < MAXSCROLLS; i++) {
+		if(s_names[i] != NULL)
+			free(s_names[i]);
+		s_names[i] = NULL;
+	}
+
+	take = 0;
+
+	for(i = 0; i < MAXSTICKS; i++) {
+		ws_made[i] = NULL;
+		ws_type[i] = NULL;
+	}
+
+	/* inventory names (malloc) */
+	for(i = 0; i < INV_TYPES; i++) {
+		if(inv_t_name[i] != NULL)
+			free(inv_t_name[i]);
+		inv_t_name[i] = NULL;
+	}
+
+	l_last_comm = '\0';
+	l_last_dir = '\0';
+	last_comm = '\0';
+	last_dir = '\0';
+
+	/* traps names (malloc) */
+	for(i = 0; i < NTRAPS; i++) {
+		if(tr_name[i] != NULL)
+			free(tr_name[i]);
+		tr_name[i] = NULL;
+	}
+
+	n_objs = 0;
+	ntraps = 0;
+	hungry_state = 0;
+	inpack = 0;
+	inv_type = 0;
+	level = 1;
+	max_level = 0;
+	mpos = 0;
+	no_food = 0;
+
+	count = 0;
+	food_left = 0;
+	lastscore = -1;
+	no_command = 0;
+	no_move = 0;
+	purse = 0;
+	quiet = 0;
+	vf_hit = 0;
+
+	dnum = (int) time(NULL);
+    seed = dnum;
+	srand((unsigned int)seed);
+
+	memset(&delta,0,sizeof(coord));
+	memset(&oldpos,0,sizeof(coord));
+	memset(&stairs,0,sizeof(coord));
+
+	memset(&player,0,sizeof(THING));
+#ifdef MASTER
+    /*
+     * Check to see if he is a wizard
+     */
+    if (wizard == TRUE) {
+		player.t_flags |= SEEMONST;
+	}
+#endif
+
+	cur_armor = NULL;
+	cur_ring[0] = NULL;
+	cur_ring[1] = NULL;
+	cur_weapon = NULL;
+	l_last_pick = NULL;
+	last_pick = NULL;
+	lvl_obj = NULL;
+	mlist = NULL;
+
+	memset(places,0,sizeof(places));
+
+	/* max_stats */
+	max_stats.s_str = 16;
+	max_stats.s_exp = 0;
+	max_stats.s_lvl = 1;
+	max_stats.s_arm = 10;
+	max_stats.s_hpt = 12;
+	strcpy(max_stats.s_dmg, "1x4");
+	max_stats.s_maxhp = 12;
+
+	for(i=0; i<MAXROOMS; i++)
+		memset(&rooms[i], 0, sizeof(struct room));
+	oldrp = NULL;
+
+	for(i=0; i<MAXPASS; i++) {
+		passages[i].r_pos.x = 0;
+		passages[i].r_pos.y = 0;
+		passages[i].r_max.x = 0;
+		passages[i].r_max.y = 0;
+		passages[i].r_gold.x = 0;
+		passages[i].r_gold.y = 0;
+		passages[i].r_goldval = 0;
+		passages[i].r_flags = ISGONE|ISDARK;
+		passages[i].r_nexits = 0;
+		for(j=0; j<12; j++) {
+			passages[i].r_exit[j].x = 0;
+			passages[i].r_exit[j].y = 0;
+		}
+	}
+
+	for(i=0; i<MAXARMORS; i++) {
+		if(arm_info[i].oi_guess != NULL)
+			free(arm_info[i].oi_guess);
+		arm_info[i].oi_guess = NULL;
+		arm_info[i].oi_know = FALSE;
+	}
+	for(i=0; i<MAXPOTIONS; i++) {
+		if(pot_info[i].oi_guess != NULL)
+			free(pot_info[i].oi_guess);
+		pot_info[i].oi_guess = NULL;
+		pot_info[i].oi_know = FALSE;
+	}
+	for(i=0; i<MAXRINGS; i++) {
+		if(ring_info[i].oi_guess != NULL)
+			free(ring_info[i].oi_guess);
+		ring_info[i].oi_guess = NULL;
+		ring_info[i].oi_know = FALSE;
+	}
+	for(i=0; i<MAXSCROLLS; i++) {
+		if(scr_info[i].oi_guess != NULL)
+			free(scr_info[i].oi_guess);
+		scr_info[i].oi_guess = NULL;
+		scr_info[i].oi_know = FALSE;
+	}
+	for(i=0; i<MAXWEAPONS+1; i++) {
+		if(weap_info[i].oi_guess != NULL)
+			free(weap_info[i].oi_guess);
+		weap_info[i].oi_guess = NULL;
+		weap_info[i].oi_know = FALSE;
+	}
+	for(i=0; i<MAXSTICKS; i++) {
+		if(ws_info[i].oi_guess != NULL)
+			free(ws_info[i].oi_guess);
+		ws_info[i].oi_guess = NULL;
+		ws_info[i].oi_know = FALSE;
+	}
+
+	for(i=0; i<20; i++)                                 /* daemon.c */
+		memset(&d_list[i],0,sizeof(struct delayed_action));
+	between = 0;                                        /* daemons.c */
+	memset(&nh,0,sizeof(coord));                        /* move.c */
+	group = 2;                                          /* weapons.c */
+}
+

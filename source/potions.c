@@ -288,32 +288,32 @@ turn_see(bool turn_off)
     add_new = FALSE;
     for (mp = mlist; mp != NULL; mp = next(mp))
     {
-	move(mp->t_pos.y, mp->t_pos.x);
-	can_see = see_monst(mp);
-	if (turn_off)
-	{
-	    if (!can_see)
-		addch(mp->t_oldch);
-	}
-	else
-	{
-	    if (!can_see)
-		standout();
-	    if (!on(player, ISHALU))
-		addch(mp->t_type);
-	    else
-		addch(rnd(26) + 'A');
-	    if (!can_see)
-	    {
-		standend();
-		add_new = TRUE;
-	    }
-	}
+		move(mp->t_pos.y, mp->t_pos.x);
+		can_see = see_monst(mp);
+		if (turn_off)
+		{
+			if (!can_see)
+				addch(mp->t_oldch);
+		}
+		else
+		{
+			if (!can_see)
+				standout();
+			if (!on(player, ISHALU))
+				addch(mp->t_type);
+			else
+				addch(rnd(26) + 'A');
+			if (!can_see)
+			{
+				standend();
+				add_new = TRUE;
+			}
+		}
     }
     if (turn_off)
-	player.t_flags &= ~SEEMONST;
+		player.t_flags &= ~SEEMONST;
     else
-	player.t_flags |= SEEMONST;
+		player.t_flags |= SEEMONST;
     return add_new;
 }
 

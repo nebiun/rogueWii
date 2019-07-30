@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -41,7 +40,7 @@ score(int amount, int flags, char monst)
     SCORE *sc2;
     SCORE *top_ten, *endp;
 	char buf[MAXSTR];
-	int start_col = 4;
+	int start_col = 0;
 # ifdef MASTER
     int prflags = 0;
 # endif
@@ -65,14 +64,14 @@ score(int amount, int flags, char monst)
 		scp->sc_level = RN;
 		scp->sc_monster = (unsigned short) RN;
     }
-    signal(SIGINT, SIG_DFL);
 
 #ifdef MASTER
-    if (wizard)
+	if (wizard) {
 		if (strcmp(prbuf, "names") == 0)
 			prflags = 1;
 		else if (strcmp(prbuf, "edit") == 0)
 			prflags = 2;
+	}
 #endif
     rd_score(top_ten);
     /*
@@ -116,14 +115,13 @@ score(int amount, int flags, char monst)
 		l++;
     mvprintw(l++,start_col,"Top %s %s:", Numname, allscore ? "Scores" : "Rogueists");
 	l++;
-    mvprintw(l++,start_col,"   Score Name");
+    mvprintw(l++,start_col,"Score Name");
 	l++;
     for (scp = top_ten; scp < endp; scp++)
     {
 		if (scp->sc_score >= 0)
 		{
-			snprintf(buf,sizeof(buf),"%2d %5d %s: %s on level %d", 
-				(int) (scp - top_ten + 1),
+			snprintf(buf,sizeof(buf),"%5d %s: %s on level %d", 
 				scp->sc_score, scp->sc_name, reason[scp->sc_flags],
 				scp->sc_level);
 			if (scp->sc_flags == 0 || scp->sc_flags == 3) {
@@ -131,7 +129,14 @@ score(int amount, int flags, char monst)
 				strcat(buf, killname((char) scp->sc_monster, TRUE));
 			}
 			strcat(buf,".");
-            mvprintw(l++,start_col,"%s",buf);
+			if(scp == sc2) {
+				wsetcurcolor(stdscr,wgetaltcolor(stdscr));
+				mvprintw(l++,start_col,"%s",buf);
+				wsetcurcolor(stdscr,wgetcolor(stdscr));
+			}
+			else {
+				mvprintw(l++,start_col,"%s",buf);
+			}
 		}
 		else
 			break;
@@ -143,6 +148,7 @@ score(int amount, int flags, char monst)
     {
 		wr_score(top_ten);
     }
+	free(top_ten);
 }
 
 /*
@@ -160,9 +166,7 @@ death(char monst)
 	int oldfont;
 	int start_line = 1;
 
-    signal(SIGINT, SIG_IGN);
     purse -= purse / 10;
-    signal(SIGINT, leave);
     clear();
     killer = killname(monst, FALSE);
 	oldfont = md_setfont(MD_FONT_BIG);
@@ -206,14 +210,7 @@ death(char monst)
 	mvprintw(N_LINES - 1, N_COLS - 1 - strlen(RS_PRESS_KEY_TO_CONTINUE2), RS_PRESS_KEY_TO_CONTINUE);
 	refresh();
 	wait_for(RC_KEY_CONTINUE);
-	
-	endwin();
-	resetltchars();
-	delwin(stdscr);
-	delwin(curscr);
-	if (hw != NULL)
-		delwin(hw);
-	my_exit(0);
+	playing = FALSE;
 }
 
 /*
@@ -237,24 +234,25 @@ total_winner()
     THING *obj;
     struct obj_info *op;
     int worth = 0;
-    int oldpurse;
+    int oldpurse, oldfont;
 
     clear();
     standout();
-    addstr("                                                               \n");
-    addstr("  @   @               @   @           @          @@@  @     @  \n");
-    addstr("  @   @               @@ @@           @           @   @     @  \n");
-    addstr("  @   @  @@@  @   @   @ @ @  @@@   @@@@  @@@      @  @@@    @  \n");
-    addstr("   @@@@ @   @ @   @   @   @     @ @   @ @   @     @   @     @  \n");
-    addstr("      @ @   @ @   @   @   @  @@@@ @   @ @@@@@     @   @     @  \n");
-    addstr("  @   @ @   @ @  @@   @   @ @   @ @   @ @         @   @  @     \n");
-    addstr("   @@@   @@@   @@ @   @   @  @@@@  @@@@  @@@     @@@   @@   @  \n");
-    addstr("                                                               \n");
-    addstr("     Congratulations, you have made it to the light of day!    \n");
+    mvaddstr(4,0,"\n");
+    addstr("          @   @               @   @           @          @@@  @      @\n");
+    addstr("          @   @               @@ @@           @           @   @      @\n");
+    addstr("          @   @  @@@  @   @   @ @ @  @@@   @@@@  @@@      @  @@@     @\n");
+    addstr("           @@@@ @   @ @   @   @   @     @ @   @ @   @     @   @      @\n");
+    addstr("              @ @   @ @   @   @   @  @@@@ @   @ @@@@@     @   @      @\n");
+    addstr("          @   @ @   @ @  @@   @   @ @   @ @   @ @         @   @  @\n");
+    addstr("           @@@   @@@   @@ @   @   @  @@@@  @@@@  @@@     @@@   @@    @\n");
+    addstr("\n");
+    addstr("             Congratulations, you have made it to the light of day!\n");
     standend();
-    addstr("\nYou have joined the elite ranks of those who have escaped the\n");
-    addstr("Dungeons of Doom alive.  You journey home and sell all your loot at\n");
-    addstr("a great profit and are admitted to the Fighters' Guild.\n");
+    addstr("\n");
+	addstr("         You have joined the elite ranks of those who have escaped the\n");
+    addstr("      Dungeons of Doom alive.  You journey home and sell all your loot at\n");
+    addstr("             a great profit and are admitted to the Fighters' Guild.\n");
     mvaddstr(LINES - 1, 0, RS_PRESS_KEY_TO_CONTINUE2);
     refresh();
     wait_for(RC_KEY_CONTINUE);
@@ -326,13 +324,22 @@ total_winner()
 		}
 		if (worth < 0)
 			worth = 0;
-		printw("%c) %5d  %s\n", obj->o_packch, worth, inv_name(obj, FALSE));
+		printw("%5d  %s\n",worth, inv_name(obj, FALSE));
 		purse += worth;
     }
     printw("   %5d  Gold Pieces          ", oldpurse);
+	mvprintw(N_LINES - 1, N_COLS - 1 - strlen(RS_PRESS_KEY_TO_CONTINUE2), RS_PRESS_KEY_TO_CONTINUE);
     refresh();
-    score(purse, 2, ' ');
-    my_exit(0);
+	wait_for(RC_KEY_CONTINUE);
+    clear();
+    oldfont = md_setfont(MD_FONT_BIG);
+	score(purse, 2, ' ');
+	refresh();
+	md_setfont(oldfont);
+	mvprintw(N_LINES - 1, N_COLS - 1 - strlen(RS_PRESS_KEY_TO_CONTINUE2), RS_PRESS_KEY_TO_CONTINUE);
+	refresh();
+	wait_for(RC_KEY_CONTINUE);
+	playing = FALSE;
 }
 
 /*

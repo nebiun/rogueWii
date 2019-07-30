@@ -16,7 +16,6 @@
 
 #undef lines 
 
-#define NOOP(x) (x += 0)
 #define CCHAR(x) ( (char) (x & A_CHARTEXT) )
 /*
  * Maximum number of different things
@@ -47,6 +46,7 @@
 #define	INV_OVER	0
 #define	INV_SLOW	1
 #define	INV_CLEAR	2
+#define INV_TYPES   3
 
 /*
  * All the fun defines
@@ -461,37 +461,6 @@ struct monster {
 
 /* Save data */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
  * External variables
  */
@@ -500,7 +469,7 @@ extern bool	after, again, allscore, amulet, door_stop, fight_flush,
 		firstmove, has_hit, inv_describe, jump, kamikaze,
 		lower_msg, move_on, msg_esc, pack_used[],
 		passgo, playing, q_comm, running, save_msg, see_floor,
-		seenstairs, stat_msg, terse, to_death, tombstone;
+		seenstairs, terse, to_death;
 
 extern char	dir_ch, file_name[], home[], huh[], *inv_t_name[],
 		l_last_comm, l_last_dir, last_comm, last_dir, *Numname,
@@ -617,7 +586,7 @@ void	look(bool wakeup);
 int	hit_monster(int y, int x, THING *obj);
 void	identify();
 void	illcom(int ch);
-void	init_check();
+void    init_globals();
 void	init_colors();
 void	init_materials();
 void	init_names();
@@ -662,7 +631,7 @@ void	read_scroll();
 void    relocate(THING *th, coord *new_loc);
 void	remove_mon(coord *mp, THING *tp, bool waskill);
 void	reset_last();
-bool	restore(const char *file, char **envp);
+bool    restore(const char *file);
 int	ring_eat(int hand);
 void	ring_on();
 void	ring_off();
@@ -683,7 +652,6 @@ void	search();
 void	set_know(THING *obj, struct obj_info *info);
 void	set_oldch(THING *tp, coord *cp);
 void	setup();
-void	shell();
 bool	show_floor();
 void	show_map();
 void	show_win(char *message);
@@ -733,7 +701,7 @@ int	passwd();
 char	be_trapped(coord *tc);
 char	floor_ch();
 char	pack_char();
-char	readchar();
+char    readchar(int flg);
 char	rnd_thing();
 
 char	*charge_str(THING *obj);

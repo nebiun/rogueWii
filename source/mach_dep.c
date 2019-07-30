@@ -21,24 +21,10 @@
  *	NUMSCORES	Number of scores in the score file (default 10).
  *	NUMNAME		String version of NUMSCORES (first character
  *			should be capitalized) (default "Ten").
- *	MAXLOAD		What (if any) the maximum load average should be
- *			when people are playing.  Since it is divided
- *			by 10, to specify a load limit of 4.0, MAXLOAD
- *			should be "40".	 If defined, then
- *      LOADAV		Should it use it's own routine to get
- *		        the load average?
- *      NAMELIST	If so, where does the system namelist
- *		        hide?
- *	MAXUSERS	What (if any) the maximum user count should be
- *	                when people are playing.  If defined, then
- *      UCOUNT		Should it use it's own routine to count
- *		        users?
- *      UTMP		If so, where does the user list hide?
  *	CHECKTIME	How often/if it should check during the game
  *			for high load average.
  */
 
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
@@ -49,8 +35,6 @@
 #include "rogue.h"
 
 #define ALLSCORES	1
-
-#define NOOP(x) (x += 0)
 
 # ifndef NUMSCORES
 #	define	NUMSCORES	10
@@ -69,16 +53,6 @@ bool allscore = FALSE;
 #ifdef CHECKTIME
 static int num_checks;		/* times we've gone over in checkout() */
 #endif /* CHECKTIME */
-
-/*
- * init_check:
- *	Check out too see if it is proper to play the game now
- */
-
-void
-init_check()
-{
-}
 
 /*
  * open_score:
@@ -127,15 +101,7 @@ setup()
 {
 #ifdef CHECKTIME
     int  checkout();
-#endif
 
-#ifdef DUMP
-    md_onsignal_autosave();
-#else
-    md_onsignal_default();
-#endif
-
-#ifdef CHECKTIME
     md_start_checkout_timer(CHECKTIME*60);
     num_checks = 0;
 #endif
@@ -143,45 +109,7 @@ setup()
     raw();				/* Raw mode */
     noecho();				/* Echo off */
     keypad(stdscr,1);
-    getltchars();			/* get the local tty chars */
 }
-
-/*
- * getltchars:
- *	Get the local tty chars for later use
- */
-
-void
-getltchars()
-{
-    got_ltc = TRUE;
-    orig_dsusp = md_dsuspchar();
-    md_setdsuspchar( md_suspchar() );
-}
-
-/* 
- * resetltchars: 
- *      Reset the local tty chars to original values. 
- */ 
-void 
-resetltchars(void) 
-{ 
-    if (got_ltc) {
-        md_setdsuspchar(orig_dsusp);
-    } 
-} 
-  
-/* 
- * playltchars: 
- *      Set local tty chars to the values we use when playing. 
- */ 
-void 
-playltchars(void) 
-{ 
-    if (got_ltc) { 
-        md_setdsuspchar( md_suspchar() );
-    } 
-} 
 
 /*
  * start_score:
@@ -205,33 +133,6 @@ is_symlink(const char *sp)
 { 	 	 
     return FALSE;
 } 
-
-#if defined(MAXLOAD) || defined(MAXUSERS)
-/*
- * too_much:
- *	See if the system is being used too much for this game
- */
-bool
-too_much()
-{
-#ifdef MAXLOAD
-    double avec[3];
-#else
-    int cnt;
-#endif
-
-#ifdef MAXLOAD
-    md_loadav(avec);
-    if (avec[1] > (MAXLOAD / 10.0))
-	return TRUE;
-#endif
-#ifdef MAXUSERS
-    if (ucount() > MAXUSERS)
-	return TRUE;
-#endif
-    return FALSE;
-}
-#endif
 
 #ifdef CHECKTIME
 /*
@@ -275,51 +176,13 @@ checkout(int sig)
 
 /*
  * chmsg:
- *	checkout()'s version of msg.  If we are in the middle of a
- *	shell, do a printf instead of a msg to a the refresh.
+ *  checkout()'s version of msg.  
  */
 /* VARARGS1 */
 
 chmsg(char *fmt, int arg)
 {
-    if (!in_shell)
 	msg(fmt, arg);
-    else
-    {
-	printf(fmt, arg);
-	putchar('\n');
-	fflush(stdout);
-    }
-}
-#endif
-
-#ifdef UCOUNT
-/*
- * ucount:
- *	count number of users on the system
- */
-#include <utmp.h>
-
-struct utmp buf;
-
-int
-ucount()
-{
-    struct utmp *up;
-    FILE *utmp;
-    int count;
-
-    if ((utmp = fopen(UTMP, "r")) == NULL)
-	return 0;
-
-    up = &buf;
-    count = 0;
-
-    while (fread(up, 1, sizeof (*up), utmp) > 0)
-	if (buf.ut_name[0] != '\0')
-	    count++;
-    fclose(utmp);
-    return count;
 }
 #endif
 

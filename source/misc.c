@@ -181,8 +181,11 @@ look(bool wakeup)
 	}
     if (door_stop && !firstmove && passcount > 1)
 		running = FALSE;
-    if (!running || !jump)
+    if (!running || !jump) {
+		wsetcurcolor(stdscr,wgetaltcolor(stdscr));
 		mvaddch(hero.y, hero.x, PLAYER);
+		wsetcurcolor(stdscr,wgetcolor(stdscr));
+	}
 # ifdef DEBUG
     done = FALSE;
 # endif /* DEBUG */
@@ -355,7 +358,7 @@ check_level()
 void
 chg_str(int amt)
 {
-    auto str_t comp;
+	str_t comp;
 
     if (amt == 0)
 	return;
@@ -485,7 +488,7 @@ get_dir()
 		do
 		{
 			gotit = TRUE;
-			switch (dir_ch = readchar())
+			switch (dir_ch = readchar(0))
 			{
 			case 'h': 
 			case 'H': 

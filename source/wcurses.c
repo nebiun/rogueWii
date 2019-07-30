@@ -80,8 +80,6 @@ int delwin(WINDOW *win)
 						break;
 					free(win->_screen[i].line);
 				}
-				if(win->_tmpLine != NULL)
-					free(win->_tmpLine);
 			}
 			free(win->_screen);
 		}
@@ -257,8 +255,9 @@ WINDOW *newwin(int nlines, int ncols, int begin_y, int begin_x)
 		}
 		p->flags = 0;
 	}
-	win->_tmpLine = malloc((win->_ncols + 1) * sizeof(char));
 	md_getcolors((int *)&win->_background, (int *)&win->_color);
+	win->_altcolor = md_get_altcolor();
+	win->_curcolor = win->_color;
 	return win;
 }
 
@@ -293,7 +292,7 @@ WINDOW *subwin(WINDOW *orig, int nlines, int ncols, int begin_y, int begin_x)
 	win->_maxx = win->_x + win->_ncols -1;
 	win->_cury = 0;
 	win->_curx = 0;
-	win->_attrs = win->_attrs;
+	win->_attrs = orig->_attrs;
 	win->_flags = W_SUBWIN;
 	sz = win->_nlines * sizeof(lineScreen_t);
 	win->_screen = malloc(sz);
@@ -304,9 +303,10 @@ WINDOW *subwin(WINDOW *orig, int nlines, int ncols, int begin_y, int begin_x)
 	for(i=0; i<win->_nlines; i++) {
 		memcpy(&win->_screen[i], &orig->_screen[i], sizeof(lineScreen_t));
 	}
-	win->_tmpLine = orig->_tmpLine;
 	win->_color = orig->_color;
 	win->_background = orig->_background;
+	win->_altcolor = orig->_altcolor;
+	win->_curcolor = orig->_curcolor;
 	return win;
 }
 
@@ -407,7 +407,7 @@ int waddch(WINDOW *win, const chtype ch)
 		waddch(win,'^');
 	}
 	else {
-		curchar->color = win->_color;
+		curchar->color = win->_curcolor;
 		curchar->value = ch;
 		win->_screen[y].flags = 1;
 		x++;
@@ -595,7 +595,7 @@ int wgetch(WINDOW *win)
 	if(win == NULL)
 		return ERR;
 
-	return md_readchar();
+	return md_readchar(0);
 }
 
 /*
@@ -634,12 +634,8 @@ int wrefresh(WINDOW *win)
 
 		for(c=0; c<win->_ncols; c++) {
 			charScreen_t *p = &win->_screen[l].line[c];
-
-			win->_tmpLine[c] = p->value;
-
+			md_putchar_at(win->_y + l, win->_x + c, p->value ,p->color);
 		}
-		win->_tmpLine[win->_ncols] = '\0';
-		md_putstr_at(win->_y + l, win->_x, win->_tmpLine ,win->_color);
 		win->_screen[l].flags = 0;
 	}
 	md_refresh();

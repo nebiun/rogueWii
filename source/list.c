@@ -100,9 +100,9 @@ new_item()
 
 #ifdef MASTER
     if ((item = calloc(1, sizeof *item)) == NULL)
-	msg("ran out of memory after %d items", total);
+		msg("ran out of memory after %d items", total);
     else
-	total++;
+		total++;
 #else
     item = calloc(1, sizeof *item);
 #endif

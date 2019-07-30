@@ -330,7 +330,8 @@ be_trapped(coord *tc)
 	case T_ARROW:
 	    if (swing(pstats.s_lvl - 1, pstats.s_arm, 1))
 	    {
-			pstats.s_hpt -= roll(1, 6);
+			if(!god_mode) 
+				pstats.s_hpt -= roll(1, 6);
 			if (pstats.s_hpt <= 0)
 			{
 				msg("an arrow killed you");
@@ -362,7 +363,8 @@ be_trapped(coord *tc)
 			msg("a small dart whizzes by your ear and vanishes");
 	    else
 	    {
-			pstats.s_hpt -= roll(1, 4);
+			if(!god_mode) 
+				pstats.s_hpt -= roll(1, 4);
 			if (pstats.s_hpt <= 0)
 			{
 				msg("a poisoned dart killed you");

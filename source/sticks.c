@@ -284,18 +284,19 @@ drain()
 	return;
     }
     *dp = NULL;
-    pstats.s_hpt /= 2;
+	if(!god_mode)
+		pstats.s_hpt /= 2;
     cnt = pstats.s_hpt / cnt;
     /*
      * Now zot all of the monsters
      */
     for (dp = drainee; *dp; dp++)
     {
-	mp = *dp;
-	if ((mp->t_stats.s_hpt -= cnt) <= 0)
-	    killed(mp, see_monst(mp));
-	else
-	    runto(&mp->t_pos);
+		mp = *dp;
+		if ((mp->t_stats.s_hpt -= cnt) <= 0)
+			killed(mp, see_monst(mp));
+		else
+			runto(&mp->t_pos);
     }
 }
 
@@ -404,12 +405,14 @@ def:
 				changed = !changed;
 				if (!save(VS_MAGIC))
 				{
-					if ((pstats.s_hpt -= roll(6, 6)) <= 0)
-					{
-						if (start == &hero)
-							death('b');
-						else
-							death(moat(start->y, start->x)->t_type);
+					if(!god_mode) {
+						if ((pstats.s_hpt -= roll(6, 6)) <= 0)
+						{
+							if (start == &hero)
+								death('b');
+							else
+								death(moat(start->y, start->x)->t_type);
+						}
 					}
 					used = TRUE;
 					if (terse)

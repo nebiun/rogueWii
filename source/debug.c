@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+static const char *dbg_name = "sd:/debug.txt";
+
 int logDebug(const char *fmt, ...)
 {
 	static int first = 0;
@@ -16,11 +18,11 @@ int logDebug(const char *fmt, ...)
 	lbuf[sizeof(lbuf)-1] = '\0';   /* tappo */
 	
 	if(first == 0) {
-		fp = fopen("sd:/debug.txt","w");
+		fp = fopen(dbg_name,"w");
 		first++;
 	}
 	else
-		fp = fopen("sd:/debug.txt","a+");
+		fp = fopen(dbg_name,"a+");
 	if(fp != NULL) {
 		fwrite(lbuf,strlen(lbuf),1,fp);
 		fclose(fp);

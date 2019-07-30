@@ -663,7 +663,6 @@ nameit(THING *obj, char *type, char *which, struct obj_info *op,
 char *
 nullstr(THING *ignored)
 {
-    NOOP(ignored);
     return "";
 }
 
@@ -684,7 +683,7 @@ pr_list()
     if (!terse)
 		addmsg(" of object do you want a list");
     msg("? ");
-    ch = readchar();
+	ch = readchar(0);
     switch (ch)
     {
 	case POTION:
