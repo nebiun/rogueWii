@@ -166,7 +166,8 @@ death(char monst)
 	int oldfont;
 	int start_line = 1;
 
-    purse -= purse / 10;
+    mpos = 0;
+	purse -= purse / 10;
     clear();
     killer = killname(monst, FALSE);
 	oldfont = md_setfont(MD_FONT_BIG);
